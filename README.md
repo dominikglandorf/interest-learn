@@ -1,6 +1,6 @@
 # InterestLearn
 
-Welcome to InterestLearn. This tool is built to engage language learners with AI-generated content that matchers their personal interests.
+Welcome to InterestLearn. This tool is built to engage language learners with AI-generated content that matches their personal interests.
 
 ## License
 
