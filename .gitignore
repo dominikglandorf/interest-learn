@@ -1,0 +1,37 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore environment variables file
+.env
+env.json
+
+# Ignore compiled or bundled files
+dist/
+build/
+
+# Ignore package lock files
+package-lock.json
+yarn.lock
+
+# Ignore IDE or editor-specific files
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+
+# Ignore operating system files
+.DS_Store
+Thumbs.db
+
+# Ignore miscellaneous files and directories
+tmp/
+*.tmp
+*.bak
+
+lambda.js
+claudia.json
+env.json

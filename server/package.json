@@ -1,0 +1,21 @@
+{
+  "name": "language-gpt-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.local.js",
+    "debug": "nodemon --inspect app.local.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "claudia update --handler lambda.handler --deploy-proxy-api --region eu-central-1 --set-env-from-json env.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-serverless-express": "^3.4.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "openai": "^3.2.1"
+  }
+}
