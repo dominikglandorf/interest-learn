@@ -13,6 +13,10 @@ const ProgressBar = ({width, time}) => {
         }
         return prevProgress + 1;
       });
+
+      return () => {
+        window.clearInterval(timer);
+      };
     }, time * 10);
 
     return () => {
@@ -28,8 +32,6 @@ const ProgressBar = ({width, time}) => {
       width: `${width}vw`
     }
 
-    console.log(barStyle)
-    
     return (
     <div className="progress-bar" style={barStyle}>
         <div className="progress-bar-fill" style={fillStyle}></div>

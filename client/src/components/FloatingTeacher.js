@@ -1,4 +1,4 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, forwardRef, useEffect, useRef } from 'react';
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import ProgressBar from './ProgressBar';
 import './FloatingTeacher.css';
@@ -9,29 +9,47 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
     const [selection, setSelection] = useState('');
     const [myInterval, setMyInterval] = useState(null);
     const [generating, setGenerating] = useState(false);
+    const handleRef = useRef(null);
+    const floatingRef = useRef(null);
 
     const resetState = () => {
       setExplanation('');
       setShowInstruction(false);
     }
-
     React.useImperativeHandle(ref, () => ({
       resetState
     }));
 
-    const handleClick = () => {
-        if (explanation) {
-            setExplanation('');
-        } else if (showInstruction) {
-            setShowInstruction(false);
-            clearInterval(myInterval);
-        } else {
-            setShowInstruction(true);
-            setMyInterval(setInterval(() => {
-                setSelection(window.getSelection().toString());
-            }, 250));
+    useEffect(() => {
+      if (!myInterval) {
+          setMyInterval(setInterval(() => {
+            setSelection(window.getSelection().toString());
+        }, 250));
+      }
+      const handleClick = (event) => {
+        if (handleRef.current) {
+          if (floatingRef.current.contains(event.target)) {
+            if (handleRef.current.contains(event.target)) {
+              if (explanation | showInstruction) {
+                resetState()
+              } else {
+                setShowInstruction(true);
+              }
+            } 
+          } else {
+            resetState();
+          }
         }
-    };
+      };
+  
+      // Attach the click event listener when the component mounts
+      document.addEventListener('click', handleClick);
+
+      return () => {
+        window.clearInterval(myInterval);
+        document.removeEventListener('click', handleClick);
+      }
+    }, [explanation, showInstruction, myInterval, selection]);
 
   const explain = () => {
     setGenerating(true);
@@ -55,12 +73,12 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
     }
 
   return (
-    <div className={`floating-teacher`}>
-        {showInstruction && !selection && <span className="teacher-text">Select text</span>}
-        {showInstruction && selection && !generating && <span className="teacher-text">Explain "{selection}"?<button onClick={explain} style={buttonStyle}>Go</button></span>}
-        {showInstruction && generating && <span className="teacher-text"><ProgressBar width={15} time={4} /></span>}
+    <div className={`floating-teacher`} ref={floatingRef}>
+        {showInstruction && !selection && <span className="teacher-text">Select text.</span>}
+        {selection && !generating && !explanation && <span className="teacher-text">Explain "{selection}"?<button onClick={explain} style={buttonStyle}>Go</button></span>}
+        {generating && <span className="teacher-text"><ProgressBar width={15} time={4} /></span>}
         {explanation && <span className="teacher-text">{explanation}</span>}
-        <span className="floating-teacher-symbol" onClick={handleClick}><FaChalkboardTeacher className="teacher-icon" /></span>
+        <span className="floating-teacher-symbol" ref={handleRef}><FaChalkboardTeacher className="teacher-icon" /></span>
     </div>
     
   );

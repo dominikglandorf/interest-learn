@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useCookies } from 'react-cookie';
 import ProgressBar from './ProgressBar';
 import FloatingTeacher from './FloatingTeacher';
 import './Generator.css';
@@ -6,6 +7,7 @@ import './Generator.css';
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SearchComponent = () => {
+  const [cookies, setCookie] = useCookies(['language', 'proficiency']);
   const [language, setLanguage] = useState('');
   const [proficiency, setProficiency] = useState('');
   const [topic, setTopic] = useState('');
@@ -17,14 +19,23 @@ const SearchComponent = () => {
     //setLanguage('French');
     //setProficiency('Advanced');
     //setTopic('Example topic');
-  }, []);
+    console.log(cookies)
+    if (language === "" & cookies.language !== "") {
+      setLanguage(cookies.language);
+    }
+    if (proficiency === "" & cookies.proficiency !== "") {
+      setProficiency(cookies.proficiency);
+    }
+  }, [language, proficiency, cookies]);
 
   const handleLanguageChange = (event) => {
     setLanguage(event.target.value);
+    setCookie('language', event.target.value, { path: '/interest-learn' });
   };
 
   const handleProficiencyChange = (event) => {
     setProficiency(event.target.value);
+    setCookie('proficiency', event.target.value, { path: '/interest-learn' });
   };
 
   const handleTopicChange = (event) => {
@@ -63,12 +74,16 @@ const SearchComponent = () => {
 
   const outputStyle = {
     margin: '0 auto',
-    maxWidth: '500px',
+    maxWidth: '90vw',
+    width: '500px',
     fontFamily: 'Hahmlet, serif',
     lineHeight: '1.5',
     fontSize: '125%',
     color: '#000',
-    padding: '20px 0'
+    padding: '20px 0',
+    textAlign: 'left',
+    overflowWrap: 'break-word',
+    hyphens: 'auto'
   };
 
   return (
@@ -107,7 +122,7 @@ const SearchComponent = () => {
           style={topicStyle}
           onChange={handleTopicChange}
           onKeyDown={handleKeyDown}
-          placeholder="Enter a topic"
+          placeholder="Enter a topic (in any language)"
         />
       </div>
       {generating ? (
