@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import SearchComponent from './components/SearchComponent';
+import Generator from './components/Generator';
 
 
 function App() {
@@ -8,8 +8,8 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <SearchComponent />
       </header>
+      <Generator />
     </div>
   );
 }

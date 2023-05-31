@@ -4,7 +4,7 @@ const { query, validationResult } = require('express-validator');
 const language = () => query('language')
   .notEmpty().withMessage('Language is required')
   .isString().withMessage('Language must be a string')
-  .isLength({ max: 10 }).withMessage('Language should not exceed 10 characters');
+  .isLength({ max: 20 }).withMessage('Language should not exceed 20 characters');
 
 // Niveau Validation Chain
 const niveau = () => query('niveau')
@@ -19,8 +19,13 @@ const topic = () => query('topic')
 
 // Topic Validation Chain
 const selection = () => query('selection')
-.notEmpty().withMessage('Selection is required')
-.isString().withMessage('Selection must be a string')
-.isLength({ max: 100 }).withMessage('Selection should not exceed 50 characters');
+  .notEmpty().withMessage('Selection is required')
+  .isString().withMessage('Selection must be a string')
+  .isLength({ max: 100 }).withMessage('Selection should not exceed 50 characters');
 
-module.exports = { language, niveau, topic, selection, validationResult }
+const text = () => query('text')
+  .notEmpty().withMessage('Text is required')
+  .isString().withMessage('Text must be a string')
+  .isLength({ max: 1000 }).withMessage('Selection should not exceed 1000 characters');
+
+module.exports = { language, niveau, topic, selection, text, validationResult }

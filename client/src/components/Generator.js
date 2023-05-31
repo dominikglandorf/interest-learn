@@ -1,10 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ProgressBar from './ProgressBar';
+import FloatingTeacher from './FloatingTeacher';
+import './Generator.css';
+
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SearchComponent = () => {
   const [language, setLanguage] = useState('');
   const [proficiency, setProficiency] = useState('');
   const [topic, setTopic] = useState('');
   const [generatedText, setGeneratedText] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const teacherRef = useRef(null);
+
+  useEffect(() => {
+    //setLanguage('French');
+    //setProficiency('Advanced');
+    //setTopic('Example topic');
+  }, []);
 
   const handleLanguageChange = (event) => {
     setLanguage(event.target.value);
@@ -25,15 +38,37 @@ const SearchComponent = () => {
   };
 
   const handleSearch = () => {
-    fetch(`http://localhost:3003/text?language=${language}&niveau=${proficiency}&topic=${topic}`)
-      .then((response) =>  {
-        console.log(response);
-        // Update the search result state with the received data
-        setGeneratedText(response);
+    
+    setGenerating(true);
+    fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`)
+      .then(response => response.text())
+      .then(text => {
+        console.log(text);
+        setGenerating(false);
+        setGeneratedText(text);
+        if (teacherRef.current) teacherRef.current.resetState();
       })
       .catch((error) => {
+        setGenerating(false);
         console.error('Error occurred during search:', error);
       });
+      
+  };
+
+  const topicStyle = {
+    width: '40vw',
+    maxWidth: '500px',
+    minWidth: '350px',
+  };
+
+  const outputStyle = {
+    margin: '0 auto',
+    maxWidth: '500px',
+    fontFamily: 'Hahmlet, serif',
+    lineHeight: '1.5',
+    fontSize: '125%',
+    color: '#000',
+    padding: '20px 0'
   };
 
   return (
@@ -43,7 +78,7 @@ const SearchComponent = () => {
         <option value="">Select Language</option>
         <option value="English">English</option>
         <option value="Spanish">Spanish</option>
-        <option value="Mandarin Chinese">Mandarin Chinese</option>
+        <option value="Chinese">Mandarin</option>
         <option value="French">French</option>
         <option value="German">German</option>
         <option value="Italian">Italian</option>
@@ -69,13 +104,23 @@ const SearchComponent = () => {
           type="text"
           id="topic"
           value={topic}
+          style={topicStyle}
           onChange={handleTopicChange}
           onKeyDown={handleKeyDown}
           placeholder="Enter a topic"
         />
       </div>
-      <button onClick={handleSearch}>Generate</button>
-      <p>{generatedText}</p>
+      {generating ? (
+        <ProgressBar width={35} time={16} />
+      ) : (
+        <button onClick={handleSearch}>Generate</button>
+      )}
+      <div style={outputStyle}>{generatedText}</div>
+      {generatedText && <FloatingTeacher
+      ref={teacherRef}
+      generatedText={generatedText}
+      backendUrl={backendUrl}
+      language={language} />}
     </div>
   );
 };

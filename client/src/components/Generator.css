@@ -1,0 +1,19 @@
+input, button {
+    font-size: 120%;
+    margin: 5px;
+    border-radius: 10px;
+    background-color: rgb(240, 255, 240);
+}
+
+input {
+    padding: 2px 10px;
+}
+
+select {
+    font-size: 125%;
+    margin: 5px;
+    background-color: rgb(240, 255, 240);
+}
+#generator {
+    margin: 0 auto;
+}
