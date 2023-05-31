@@ -16,10 +16,6 @@ const SearchComponent = () => {
   const teacherRef = useRef(null);
 
   useEffect(() => {
-    //setLanguage('French');
-    //setProficiency('Advanced');
-    //setTopic('Example topic');
-    console.log(cookies)
     if (language === "" & cookies.language !== "") {
       setLanguage(cookies.language);
     }
@@ -54,7 +50,6 @@ const SearchComponent = () => {
     fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`)
       .then(response => response.text())
       .then(text => {
-        console.log(text);
         setGenerating(false);
         setGeneratedText(text);
         if (teacherRef.current) teacherRef.current.resetState();

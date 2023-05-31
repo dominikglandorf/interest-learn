@@ -23,8 +23,13 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
     useEffect(() => {
       if (!myInterval) {
           setMyInterval(setInterval(() => {
-            setSelection(window.getSelection().toString());
-        }, 250));
+            const selectedText = window.getSelection().toString();
+            if (selectedText.length < 50 && generatedText.includes(selectedText)) {
+              setSelection(selectedText);
+            } else {
+              setSelection('');
+            }
+        }, 1000));
       }
       const handleClick = (event) => {
         if (handleRef.current) {
@@ -49,7 +54,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
         window.clearInterval(myInterval);
         document.removeEventListener('click', handleClick);
       }
-    }, [explanation, showInstruction, myInterval, selection]);
+    }, [generatedText, explanation, showInstruction, myInterval, selection]);
 
   const explain = () => {
     setGenerating(true);
@@ -77,7 +82,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
         {showInstruction && !selection && <span className="teacher-text">Select text.</span>}
         {selection && !generating && !explanation && <span className="teacher-text">Explain "{selection}"?<button onClick={explain} style={buttonStyle}>Go</button></span>}
         {generating && <span className="teacher-text"><ProgressBar width={15} time={4} /></span>}
-        {explanation && <span className="teacher-text">{explanation}</span>}
+        {explanation && <span className="teacher-text explanation">{explanation}</span>}
         <span className="floating-teacher-symbol" ref={handleRef}><FaChalkboardTeacher className="teacher-icon" /></span>
     </div>
     
