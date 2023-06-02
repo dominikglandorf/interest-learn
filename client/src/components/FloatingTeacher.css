@@ -2,7 +2,7 @@
   display: flex;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 500px) {
   /* Styles for larger screens, where fixed positioning is supported */
   .floating-teacher {
     position: fixed;
@@ -12,11 +12,11 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 499px) {
   /* Styles for smaller screens, where fixed positioning might not be supported */
   .floating-teacher {
       position: fixed;
-      bottom: 100px; /* Adjust the distance from the bottom as needed */
+      top: 50%;
       right: 10px; 
   }
 }

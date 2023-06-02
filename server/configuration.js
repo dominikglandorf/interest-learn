@@ -10,4 +10,6 @@ const openai = new OpenAIApi(configuration);
 
 MODEL = process.env.MODEL
 
-module.exports = { openai, MODEL }
+MOCK = process.env.MOCK == "1"
+
+module.exports = { openai, MODEL, MOCK }

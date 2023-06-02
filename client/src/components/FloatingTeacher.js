@@ -4,57 +4,52 @@ import ProgressBar from './ProgressBar';
 import './FloatingTeacher.css';
 
 const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, ref) => {
-    const [showInstruction, setShowInstruction] = useState(false);
-    const [explanation, setExplanation] = useState('');
-    const [selection, setSelection] = useState('');
-    const [myInterval, setMyInterval] = useState(null);
-    const [generating, setGenerating] = useState(false);
-    const handleRef = useRef(null);
-    const floatingRef = useRef(null);
+  const [showInstruction, setShowInstruction] = useState(false);
+  const [explanation, setExplanation] = useState('');
+  const [selection, setSelection] = useState('');
+  const [myInterval, setMyInterval] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const handleRef = useRef(null);
+  const floatingRef = useRef(null);
 
-    const resetState = () => {
-      setExplanation('');
-      setShowInstruction(false);
+  const resetState = () => {
+    setExplanation('');
+    setShowInstruction(false);
+  }
+  React.useImperativeHandle(ref, () => ({
+    resetState
+  }));
+
+  useEffect(() => {
+    if (!myInterval) {
+      setMyInterval(
+        setInterval(() => setSelection(document.getSelection().toString()),
+        1000)
+      )
     }
-    React.useImperativeHandle(ref, () => ({
-      resetState
-    }));
-
-    useEffect(() => {
-      if (!myInterval) {
-          setMyInterval(setInterval(() => {
-            const selectedText = window.getSelection().toString();
-            if (selectedText.length < 50 && generatedText.includes(selectedText)) {
-              setSelection(selectedText);
+    const handleClick = (event) => {
+      if (handleRef.current) {
+        if (floatingRef.current.contains(event.target)) {
+          if (handleRef.current.contains(event.target)) {
+            if (explanation | showInstruction) {
+              resetState();
             } else {
-              setSelection('');
+              setShowInstruction(true);
             }
-        }, 1000));
-      }
-      const handleClick = (event) => {
-        if (handleRef.current) {
-          if (floatingRef.current.contains(event.target)) {
-            if (handleRef.current.contains(event.target)) {
-              if (explanation | showInstruction) {
-                resetState()
-              } else {
-                setShowInstruction(true);
-              }
-            } 
-          } else {
-            resetState();
-          }
+          } 
+        } else {
+          resetState();
         }
-      };
-  
-      // Attach the click event listener when the component mounts
-      document.addEventListener('click', handleClick);
-
-      return () => {
-        window.clearInterval(myInterval);
-        document.removeEventListener('click', handleClick);
       }
-    }, [generatedText, explanation, showInstruction, myInterval, selection]);
+    };
+
+    // Attach the click event listener when the component mounts
+    document.addEventListener('click', handleClick);
+
+    return () => {
+      document.removeEventListener('click', handleClick);
+    }
+  }, [myInterval, explanation, showInstruction]);
 
   const explain = () => {
     setGenerating(true);
@@ -72,15 +67,17 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
       });
   }
 
-    const buttonStyle = {
-        margin: "0 5px",
-        fontSize: "100%"
-    }
+  const buttonStyle = {
+      margin: "0 5px",
+      fontSize: "100%"
+  }
+
+  const validSelection = selection !== "" && selection.length < 50 && generatedText.includes(selection)
 
   return (
     <div className={`floating-teacher`} ref={floatingRef}>
         {showInstruction && !selection && <span className="teacher-text">Select text.</span>}
-        {selection && !generating && !explanation && <span className="teacher-text">Explain "{selection}"?<button onClick={explain} style={buttonStyle}>Go</button></span>}
+        {validSelection && !generating && !explanation && <span className="teacher-text">Explain "{selection}"?<button onClick={explain} style={buttonStyle}>Go</button></span>}
         {generating && <span className="teacher-text"><ProgressBar width={15} time={4} /></span>}
         {explanation && <span className="teacher-text explanation">{explanation}</span>}
         <span className="floating-teacher-symbol" ref={handleRef}><FaChalkboardTeacher className="teacher-icon" /></span>

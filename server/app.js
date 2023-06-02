@@ -1,6 +1,8 @@
 const express = require('express');
 const textRouter = require('./text');
 const explanationRouter = require('./explanation');
+const vocabularyRouter = require('./vocabulary');
+const exportRouter = require('./export');
 
 const app = express();
 
@@ -17,6 +19,8 @@ app.get('/', async (req, res) => {
 
 app.use('/text', textRouter);
 app.use('/explanation', explanationRouter);
+app.use('/vocabulary', vocabularyRouter);
+app.use('/export', exportRouter);
 
 module.exports = app
 
