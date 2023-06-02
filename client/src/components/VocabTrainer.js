@@ -76,7 +76,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
 
   return (
     <div>
-        {!generating && !vocabulary.length && <button onClick={collect}>Extract vocabulary</button>}
+        {!generating && !vocabulary.length && <button onClick={collect}>Show vocabulary</button>}
         {generating && <ProgressBar width={15} time={6} />}
         {vocabulary.length > 0 && <div className={`vocab-trainer`}><h3>Vocabulary</h3><ul className=".output">{vocabulary.map(Word)}</ul></div>}
         {vocabulary.length > 0 && <>
