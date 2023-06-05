@@ -5,16 +5,18 @@ const { openai, MODEL, MOCK } = require('./configuration');
 
 const router = express.Router();
 
-const extractPairs = (vocabulary, response) => {
-    // const keywords = vocabulary.split(',');
+const sanitize = (info) => {
+    return info.replace("N/A", "-").trim()
+}
+
+const extractPairs = (response) => {
     const lines = response.split('\n');
-    //const startIndex = lines.findIndex(line => line.includes(keywords[0]));
-    //const vocabLines = lines.slice(startIndex, startIndex + keywords.length)
-    const switchedColumns = lines.map((line) => {
+    const switchedColumns = lines.slice(lines[0].includes("entry,") ? 1 : 0).map((line) => {
         entries = line.split(',');
-        return `${entries[1].trim()},${entries[0].replace(/\d+\.\s/g, "")}`;
+        if (entries.length < 4) return false
+        return `${entries[3].replace(/\([^)]+\)/g).trim()},${entries[0].trim()} (${sanitize(entries[1])}/${sanitize(entries[2])})`;
     })
-    return switchedColumns.join('\n');
+    return switchedColumns.filter((entry) => entry !== false).join('\n');
 }
 
 router.get('', [
@@ -69,8 +71,8 @@ Please note that some words may not require articles in certain contexts, but I 
         console.log(completion);
         res.send(`Error: ${completion.statusText}`);
     }
-
-    const vocab = extractPairs(vocabulary, completion.data.choices[0].message.content)
+    console.log(completion.data.choices[0].message.content);
+    const vocab = extractPairs(completion.data.choices[0].message.content)
     return res.send(vocab);
 });
 

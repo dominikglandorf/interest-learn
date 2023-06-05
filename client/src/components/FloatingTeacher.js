@@ -3,7 +3,7 @@ import { FaChalkboardTeacher } from 'react-icons/fa';
 import ProgressBar from './ProgressBar';
 import './FloatingTeacher.css';
 
-const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, ref) => {
+const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency }, ref) => {
   const [showInstruction, setShowInstruction] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
@@ -23,7 +23,10 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
   useEffect(() => {
     if (!myInterval) {
       setMyInterval(
-        setInterval(() => setSelection(document.getSelection().toString()),
+        setInterval(() => {
+          const currentSelection = document.getSelection().toString();
+          setSelection(currentSelection);
+        },
         1000)
       )
     }
@@ -49,11 +52,11 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
     return () => {
       document.removeEventListener('click', handleClick);
     }
-  }, [myInterval, explanation, showInstruction]);
+  }, [myInterval, explanation, showInstruction, vocabRef]);
 
   const explain = () => {
     setGenerating(true);
-    fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&text=${generatedText}`)
+    fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&topic=${topic}&niveau=${proficiency}`)
       .then(response => response.text())
       .then(text => {
         setShowInstruction(false);
@@ -74,12 +77,22 @@ const FloatingTeacher  = forwardRef(({ generatedText, backendUrl, language }, re
 
   const validSelection = selection !== "" && selection.length < 50 && generatedText.includes(selection)
 
+  const addVocab = () => {
+    if (vocabRef.current) vocabRef.current.addVocab(selection)
+  }
+
   return (
     <div className={`floating-teacher`} ref={floatingRef}>
         {showInstruction && !selection && <span className="teacher-text">Select text.</span>}
-        {validSelection && !generating && !explanation && <span className="teacher-text">Explain "{selection}"?<button onClick={explain} style={buttonStyle}>Go</button></span>}
+        {validSelection && !generating && !explanation && <span className="teacher-text">
+          Explain "{selection}"? <button onClick={explain} style={buttonStyle}>Go</button><br />
+          Add to vocabulary? <button onClick={addVocab} style={buttonStyle}>Go</button>
+          </span>}
         {generating && <span className="teacher-text"><ProgressBar width={15} time={4} /></span>}
-        {explanation && <span className="teacher-text explanation">{explanation}</span>}
+        {explanation && <span className="teacher-text explanation">
+          {explanation}<br />
+          Add to vocabulary? <button onClick={addVocab} style={buttonStyle}>Go</button>
+          </span>}
         <span className="floating-teacher-symbol" ref={handleRef}><FaChalkboardTeacher className="teacher-icon" /></span>
     </div>
     

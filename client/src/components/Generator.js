@@ -124,9 +124,12 @@ const SearchComponent = () => {
       {generatedText && <div className="output"><h2>{topicGenerated}</h2>{generatedText}</div>}
       {generatedText && <FloatingTeacher
       ref={teacherRef}
+      vocabRef={vocabRef}
       generatedText={generatedText}
       backendUrl={backendUrl}
-      language={language} />}
+      language={language}
+      proficiency={proficiency}
+      topic={topic} />}
       {generatedText && <VocabTrainer
       ref={vocabRef}
       topic={topic}
@@ -143,7 +146,7 @@ const SearchComponent = () => {
       <li>Select words or phrases in the generated text that you would like to have explained and wait approximately 5 seconds for the explanation.</li>
       <li>Generate a vocabulary list with important words by clicking on the button below the text.</li>
       <li>Enter your mother tongue and click on "Export" to generate a simple text file containing the vocabulary and a translation to your langue.</li>
-      <li>Import the text file to your favorite flashcard learning platform such as Anki to regularly study and retain the words.</li></ol>
+      <li>Import the comma-seperated text file to your favorite flashcard learning platform such as Anki to regularly study and retain the words.</li></ol>
       Language learners who can already read the language and have some basic vocabulary but struggle to understand media designed for a native audience benefit the most. It is highly recommended to actively engage in conversations with a tandem partner at this level of learning.
       </>}
       </div>}

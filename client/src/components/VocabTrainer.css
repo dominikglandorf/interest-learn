@@ -11,6 +11,15 @@
     hyphens: auto;
 }
 
+.vocab-trainer>button, .vocab-trainer>input {
+    font-size: 100%;
+}
+
+.vocab-trainer>.progress-bar {
+    margin: 5px;
+    display: inline-block;
+}
+
 ul {
     list-style: none;
     padding: 5px;

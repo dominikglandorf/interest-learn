@@ -11,13 +11,18 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   const [translationLanguage, setTranslationLanguage] = useState('');
   const [cookies, setCookie] = useCookies(['translation_language']);
 
+  const addVocab = (vocab) => {
+    if (!vocabulary.includes(vocab)) setVocabulary(vocabulary.concat([vocab]));
+  }
+
   const resetState = () => {
     setGenerating(false);
     setExporting(false);
     setVocabulary([]);
   }
   React.useImperativeHandle(ref, () => ({
-    resetState
+    resetState,
+    addVocab
   }));
 
   useEffect(() => {
@@ -75,20 +80,24 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   };
 
   return (
-    <div>
-        {!generating && !vocabulary.length && <button onClick={collect}>Show vocabulary</button>}
-        {generating && <ProgressBar width={15} time={6} />}
-        {vocabulary.length > 0 && <div className={`vocab-trainer`}><h3>Vocabulary</h3><ul className=".output">{vocabulary.map(Word)}</ul></div>}
-        {vocabulary.length > 0 && <>
-            <input
-                type="text"
-                id="language"
-                value={translationLanguage}
-                onChange={handleTransLangChange}
-                placeholder="Translation language"
-            /><br />
-            {!exporting && <button onClick={exportList}>Export</button>}
-            {exporting && <ProgressBar width={15} time={20} />}
+    <div className={`vocab-trainer`}>
+      <h3>Vocabulary</h3>
+      {vocabulary.length > 0 && <>
+        <ul className=".output">{vocabulary.map(Word)}</ul>
+      </>}
+      {!vocabulary.length && !generating && <button onClick={collect}>Auto-extract</button>}
+      {generating && <ProgressBar width={15} time={6} />}
+      <br />
+      {vocabulary.length > 0 && <>
+        <input
+              type="text"
+              id="language"
+              value={translationLanguage}
+              onChange={handleTransLangChange}
+              placeholder="Translation language"
+          />
+          {!exporting && <button onClick={exportList}>Export</button>}
+          {exporting && <ProgressBar width={10} time={20} />}
         </>}
     </div>
   );
