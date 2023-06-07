@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import LinearProgress from '@mui/material/LinearProgress';
 import './ProgressBar.css';
 
-const ProgressBar = ({width, time}) => {
+const ProgressBar = ({time}) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -24,18 +25,8 @@ const ProgressBar = ({width, time}) => {
     };
   }, [time]);
 
-    const fillStyle = {
-      width: `${progress}%`,
-    };
-
-    const barStyle = {
-      width: `${width}vw`
-    }
-
     return (
-    <div className="progress-bar" style={barStyle}>
-        <div className="progress-bar-fill" style={fillStyle}></div>
-    </div>
+      <LinearProgress variant="determinate" value={progress} />
     );
 };
 

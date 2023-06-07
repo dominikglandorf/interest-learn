@@ -1,20 +1,19 @@
 import React, { useState, forwardRef, useEffect, useRef } from 'react';
-import { FaChalkboardTeacher } from 'react-icons/fa';
-import ProgressBar from './ProgressBar';
-import './FloatingTeacher.css';
+import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popover, Box } from '@mui/material';
+import { Info, Add, AccountCircle } from '@mui/icons-material';
 
 const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency }, ref) => {
-  const [showInstruction, setShowInstruction] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
   const [myInterval, setMyInterval] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [added, setAdded] = useState('');
+
   const handleRef = useRef(null);
   const floatingRef = useRef(null);
 
   const resetState = () => {
     setExplanation('');
-    setShowInstruction(false);
   }
   React.useImperativeHandle(ref, () => ({
     resetState
@@ -24,78 +23,86 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
     if (!myInterval) {
       setMyInterval(
         setInterval(() => {
-          const currentSelection = document.getSelection().toString();
-          setSelection(currentSelection);
+          const currentSelection = document.getSelection();
+          setSelection(currentSelection.toString());
+          // if (currentSelection.rangeCount > 0) {
+          //   console.log(currentSelection.toString())
+          //   console.log(currentSelection)
+          //   const range = currentSelection.getRangeAt(0);
+          //   const rect = range.getBoundingClientRect();
+          //   const { top, left, width, height } = rect;
+          //   //setAnchorEl({ top, left, width, height });
+          // }
         },
-        1000)
+        250)
       )
     }
-    const handleClick = (event) => {
-      if (handleRef.current) {
-        if (floatingRef.current.contains(event.target)) {
-          if (handleRef.current.contains(event.target)) {
-            if (explanation | showInstruction) {
-              resetState();
-            } else {
-              setShowInstruction(true);
-            }
-          } 
-        } else {
-          resetState();
-        }
-      }
-    };
 
-    // Attach the click event listener when the component mounts
-    document.addEventListener('click', handleClick);
-
-    return () => {
-      document.removeEventListener('click', handleClick);
-    }
-  }, [myInterval, explanation, showInstruction, vocabRef]);
+  }, [myInterval]);
 
   const explain = () => {
     setGenerating(true);
     fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&topic=${topic}&niveau=${proficiency}`)
       .then(response => response.text())
       .then(text => {
-        setShowInstruction(false);
         setGenerating(false);
         setExplanation(text);
+        vocabRef.current.addVocab(selection);
       })
       .catch((error) => {
-        setShowInstruction(false);
         setGenerating(false);
         console.error('Error occurred during search:', error);
       });
   }
 
-  const buttonStyle = {
-      margin: "0 5px",
-      fontSize: "100%"
-  }
-
   const validSelection = selection !== "" && selection.length < 50 && generatedText.includes(selection)
 
   const addVocab = () => {
-    if (vocabRef.current) vocabRef.current.addVocab(selection)
+    if (vocabRef.current) {
+      vocabRef.current.addVocab(selection);
+      setAdded(selection);
+    }
   }
 
   return (
-    <div className={`floating-teacher`} ref={floatingRef}>
-        {showInstruction && !selection && <span className="teacher-text">Select text.</span>}
-        {validSelection && !generating && !explanation && <span className="teacher-text">
-          Explain "{selection}"? <button onClick={explain} style={buttonStyle}>Go</button><br />
-          Add to vocabulary? <button onClick={addVocab} style={buttonStyle}>Go</button>
-          </span>}
-        {generating && <span className="teacher-text"><ProgressBar width={15} time={4} /></span>}
-        {explanation && <span className="teacher-text explanation">
-          {explanation}<br />
-          Add to vocabulary? <button onClick={addVocab} style={buttonStyle}>Go</button>
-          </span>}
-        <span className="floating-teacher-symbol" ref={handleRef}><FaChalkboardTeacher className="teacher-icon" /></span>
-    </div>
-    
+    <>
+      <SpeedDial
+        ariaLabel="Vocabulary SpeedDial"
+        icon={<Tooltip title="Select vocabulary in the text."><AccountCircle /></Tooltip>}
+        open={validSelection || generating}
+        direction="up"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+      >
+        <SpeedDialAction
+          key="add"
+          icon={<Tooltip title="Add to vocabulary"><Add /></Tooltip>}
+          onClick={addVocab}
+        />
+        <SpeedDialAction
+        key="explain"
+          icon={<Tooltip title={`Explain "${selection}"`} >{generating ? (
+            <CircularProgress  />
+          ) : (
+            <Info />
+          )}</Tooltip>}
+          onClick={explain}
+        />
+      </SpeedDial>
+      {explanation !== '' && <Popover
+        open={explanation !== ''}
+        onClose={() => setExplanation('')}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      ><Box sx={{ p: 2 }}>{explanation}</Box></Popover>}
+      {added !== '' && <Snackbar
+        open={added !== ''}
+        autoHideDuration={2000}
+        onClose={() => setAdded('')}
+        message={`Added ${added} to vocabulary.`}
+      />}
+    </>
   );
 })
 

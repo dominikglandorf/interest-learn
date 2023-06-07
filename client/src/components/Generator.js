@@ -3,8 +3,17 @@ import { useCookies } from 'react-cookie';
 import ProgressBar from './ProgressBar';
 import FloatingTeacher from './FloatingTeacher';
 import VocabTrainer from './VocabTrainer';
-import { FaCaretUp, FaCaretDown } from 'react-icons/fa';
-import './Generator.css';
+import Autocomplete from '@mui/material/Autocomplete'
+import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import { Grid, Button, MenuItem, Paper, Typography } from '@mui/material';
+
+
+
+// import './Generator.css';
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -16,7 +25,7 @@ const SearchComponent = () => {
   const [topicGenerated, setTopicGenerated] = useState('');
   const [generatedText, setGeneratedText] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [showInstruction, setShowInstruction] = useState(false); 
+
   const teacherRef = useRef(null);
   const vocabRef = useRef(null);
 
@@ -27,11 +36,13 @@ const SearchComponent = () => {
     if (proficiency === "" & cookies.proficiency !== "") {
       setProficiency(cookies.proficiency);
     }
+    // setTopic("Jetlag")
+    // setGeneratedText(`Le décalage horaire, communément appelé "jetlag", est l'un des effets secondaires les plus frustrants et difficiles à éviter des voyages internationaux. En règle générale, cela se produit lorsque notre rythme circadien est perturbé en raison d'un long vol à travers les fuseaux horaires. Les symptômes varient en fonction de la gravité, mais les plus courants sont la fatigue, les maux de tête, les nausées et même la dépression. Pour éviter les effets du décalage horaire, il est recommandé de se reposer avant de voyager, de bien s'hydrater tout au long du vol et d'ajuster son horloge corporelle en avançant ou en reculant progressivement ses heures de sommeil avant le voyage.`)
   }, [language, proficiency, cookies]);
 
-  const handleLanguageChange = (event) => {
-    setLanguage(event.target.value);
-    setCookie('language', event.target.value, { path: '/interest-learn' });
+  const handleLanguageChange = (event, newValue) => {
+    setLanguage(newValue);
+    setCookie('language', newValue, { path: '/interest-learn' });
   };
 
   const handleProficiencyChange = (event) => {
@@ -43,23 +54,23 @@ const SearchComponent = () => {
     setTopic(event.target.value);
   };
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const handleSearch = () => {
-    
+  const handleSearch = (event) => {
+    event.preventDefault();
     setGenerating(true);
+    setTopicGenerated(topic);
     fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`)
-      .then(response => response.text())
-      .then(text => {
-        setGenerating(false);
-        setTopicGenerated(topic);
-        setGeneratedText(text);
-        if (teacherRef.current) teacherRef.current.resetState();
-        if (vocabRef.current) vocabRef.current.resetState();
+      .then(response => response.json())
+      .then(response => {
+        if (response.status === 200) {
+          console.log(response.text)
+          setGenerating(false);
+          setGeneratedText(response.text);
+          if (teacherRef.current) teacherRef.current.resetState();
+        // if (vocabRef.current) vocabRef.current.resetState();
+        } else {
+          setGenerating(false);
+        }
+        
       })
       .catch((error) => {
         setGenerating(false);
@@ -68,60 +79,107 @@ const SearchComponent = () => {
       
   };
 
-  const topicStyle = {
-    width: '450px',
-    maxWidth: '85vw',
-  };
 
-  const toggleInstruction = () => {
-    setShowInstruction(!showInstruction)
-  }
+  const top10Languages = [
+    'English',
+    'German',
+    'French',
+    'Spanish',
+    'Italian',
+    'Russian',
+    'Chinese',
+    'Polish',
+    'Turkish',
+    'Arabic',
+    'Portuguese'
+    ];
 
   return (
-    <div>
-      <div>
-      <select id="language" value={language} onChange={handleLanguageChange}>
-        <option value="">Select Language</option>
-        <option value="English">English</option>
-        <option value="Spanish">Spanish</option>
-        <option value="Chinese">Mandarin</option>
-        <option value="French">French</option>
-        <option value="German">German</option>
-        <option value="Italian">Italian</option>
-        <option value="Japanese">Japanese</option>
-        <option value="Russian">Russian</option>
-        <option value="Arabic">Arabic</option>
-        <option value="Portuguese">Portuguese</option>
-        {/* Add more language options as needed */}
-    </select>
-
-      </div>
-      <div>
-        <select id="proficiency" value={proficiency} onChange={handleProficiencyChange}>
-          <option value="">Select Proficiency</option>
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
-          {/* Add more proficiency options as needed */}
-        </select>
-      </div>
-      <div>
-        <input
-          type="text"
-          id="topic"
-          value={topic}
-          style={topicStyle}
-          onChange={handleTopicChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter a topic (in any language)"
-        />
-      </div>
-      {generating ? (
-        <ProgressBar width={35} time={16} />
-      ) : (
-        <button onClick={handleSearch}>Generate</button>
-      )}
-      {generatedText && <div className="output"><h2>{topicGenerated}</h2>{generatedText}</div>}
+    <>
+    <Box marginTop={4}>
+      <form onSubmit={handleSearch}>
+        <Grid alignItems="center" container spacing={2}>
+          <Grid item xs={6} md={3}>
+            <Autocomplete
+              required
+              fullWidth
+              id="language"
+              freeSolo
+              value={language}
+              onChange={handleLanguageChange}
+              options={top10Languages}
+              renderInput={(params) => <TextField {...params} label="Language to learn" />}
+            />
+          
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <FormControl fullWidth>
+              <InputLabel id="proficiency-label">Proficiency</InputLabel>
+              <Select
+                labelId="proficiency-label"
+                required
+                id="proficiency"
+                value={proficiency}
+                label="Proficiency"
+                onChange={handleProficiencyChange}
+              >
+                <MenuItem value={"Beginner"}>Beginner</MenuItem>
+                <MenuItem value={"Intermediate"}>Intermediate</MenuItem>
+                <MenuItem value={"Advanced"}>Advanced</MenuItem>
+              </Select>
+            </FormControl>
+        </Grid>
+        <Grid item xs={9} md={3}>
+          <TextField
+            fullWidth
+            required
+            value={topic}
+            id="topic"
+            label="Topic (in any language)"
+            variant="outlined"
+            onChange={handleTopicChange}
+          />
+        </Grid>
+        <Grid item xs={3} md={3}>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            disabled={generating}>
+              Generate
+          </Button>
+          </Grid>
+        </Grid>
+      </form>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          {(generating || generatedText) && <Paper elevation={3} style={{
+            padding: '20px',
+            margin: '20px 0',
+            lineHeight: '1.7',
+            fontSize: '110%',
+            fontFamily: 'Hahmlet, serif',
+            wordWrap: 'break-word',
+            hyphens: 'auto'}}>
+          <Typography variant="h4" gutterBottom>
+      {topicGenerated}
+    </Typography>
+            {generating && <ProgressBar time={16} />}
+            {generatedText && !generating && <>{generatedText}</>}
+            </Paper>}
+          </Grid>
+          <Grid item xs={12} md={6}>
+          {generatedText && <VocabTrainer
+            ref={vocabRef}
+            topic={topic}
+            language={language}
+            generatedText={generatedText}
+            backendUrl={backendUrl}
+            proficiency={proficiency} />}
+          </Grid>
+          
+      </Grid>
+      
       {generatedText && <FloatingTeacher
       ref={teacherRef}
       vocabRef={vocabRef}
@@ -130,29 +188,8 @@ const SearchComponent = () => {
       language={language}
       proficiency={proficiency}
       topic={topic} />}
-      {generatedText && <VocabTrainer
-      ref={vocabRef}
-      topic={topic}
-      language={language}
-      generatedText={generatedText}
-      backendUrl={backendUrl}
-      proficiency={proficiency} />}
-      {<div className="how-to" onClick={toggleInstruction}><p className="how-to-opener">How to use this? {showInstruction ? <FaCaretUp /> : <FaCaretDown/>}</p>
-      {showInstruction && <>
-      <p>This app is made for language learning that is actually helpful for your communication. It helps you to acquire vocabulary for the topics that you wish to speak about with your peers.</p>
-      <ol><li>Select the language you learn and your current level.</li>
-      <li>Enter a topic that you are interested in or that you would like to learn more about.</li>
-      <li>Click on "Generate" and wait approximately 15 seconds for your personalized text to be generated.</li>
-      <li>Select words or phrases in the generated text that you would like to have explained and wait approximately 5 seconds for the explanation.</li>
-      <li>Generate a vocabulary list with important words by clicking on the button below the text.</li>
-      <li>Enter your mother tongue and click on "Export" to generate a simple text file containing the vocabulary and a translation to your langue.</li>
-      <li>Import the comma-seperated text file to your favorite flashcard learning platform such as Anki to regularly study and retain the words.</li></ol>
-      Language learners who can already read the language and have some basic vocabulary but struggle to understand media designed for a native audience benefit the most. It is highly recommended to actively engage in conversations with a tandem partner at this level of learning.
-      </>}
-      </div>}
-      
-    </div>
-
+    </Box>
+</>
   );
 };
 

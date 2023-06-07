@@ -1,8 +1,7 @@
 import React, { useState, forwardRef, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import ProgressBar from './ProgressBar';
-import { FaTrash } from 'react-icons/fa';
-import './VocabTrainer.css';
+import { Button, Chip, Typography, Grid, TextField, Box } from '@mui/material';
 
 const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency }, ref) => {
   const [generating, setGenerating] = useState(false);
@@ -72,7 +71,14 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
     setVocabulary(vocabulary.filter((elem) => elem !== name));
   }
 
-  const Word = (name) => <li key={name}><FaTrash onClick={()=>removeFromVocab(name)} size={14} /> {name}</li>
+  const Word = (name) => <Chip
+  label={name}
+  color="success"
+  key={name}
+  sx={{
+    margin: 0.5,
+  }}
+  onDelete={()=>removeFromVocab(name)}>{}</Chip>
 
   const handleTransLangChange = (event) => {
     setTranslationLanguage(event.target.value);
@@ -80,26 +86,35 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   };
 
   return (
-    <div className={`vocab-trainer`}>
-      <h3>Vocabulary</h3>
+    <Box sx={{marginTop: 3, marginLeft: 2, marginBottom: 3}}>
+    <Grid container alignItems="center" spacing={1}>
+      <Grid item xs={12}>
+        <Typography variant="h5">
+        Vocabulary
+      </Typography>
+        {vocabulary.length > 0 && <> {vocabulary.map(Word)} </>}
+        {!vocabulary.length && !generating && <Button onClick={collect}>Auto-extract</Button>}
+        {generating && <ProgressBar width={15} time={6} />}
+      </Grid>
       {vocabulary.length > 0 && <>
-        <ul className=".output">{vocabulary.map(Word)}</ul>
-      </>}
-      {!vocabulary.length && !generating && <button onClick={collect}>Auto-extract</button>}
-      {generating && <ProgressBar width={15} time={6} />}
-      <br />
-      {vocabulary.length > 0 && <>
-        <input
-              type="text"
-              id="language"
-              value={translationLanguage}
-              onChange={handleTransLangChange}
-              placeholder="Translation language"
-          />
-          {!exporting && <button onClick={exportList}>Export</button>}
-          {exporting && <ProgressBar width={10} time={20} />}
+        <Grid item xs={6}>
+        <TextField
+        fullWidth
+          required
+          id="topic"
+          label="Translation language"
+          variant="outlined"
+            type="text"
+            onChange={handleTransLangChange}
+        />
+        </Grid>
+        <Grid item xs={6}>
+        {!exporting && <Button fullWidth onClick={exportList}>Export</Button>}
+        {exporting && <ProgressBar time={vocabulary.length * 1.5} />}
+        </Grid>
         </>}
-    </div>
+    </Grid>
+    </Box>
   );
 });
 
