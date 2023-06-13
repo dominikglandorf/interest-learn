@@ -11,10 +11,6 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { Grid, Button, MenuItem, Paper, Typography } from '@mui/material';
 
-
-
-// import './Generator.css';
-
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 const SearchComponent = () => {
@@ -23,8 +19,9 @@ const SearchComponent = () => {
   const [proficiency, setProficiency] = useState('');
   const [topic, setTopic] = useState('');
   const [topicGenerated, setTopicGenerated] = useState('');
-  const [generatedText, setGeneratedText] = useState('');
+  const [generatedText, setGeneratedText] = useState([]);
   const [generating, setGenerating] = useState(false);
+  const [generatingMore, setGeneratingMore] = useState(false);
 
   const teacherRef = useRef(null);
   const vocabRef = useRef(null);
@@ -64,7 +61,7 @@ const SearchComponent = () => {
         if (response.status === 200) {
           console.log(response.text)
           setGenerating(false);
-          setGeneratedText(response.text);
+          setGeneratedText([response.text]);
           if (teacherRef.current) teacherRef.current.resetState();
         // if (vocabRef.current) vocabRef.current.resetState();
         } else {
@@ -78,6 +75,28 @@ const SearchComponent = () => {
       });
       
   };
+
+  const more = () => {
+    setGeneratingMore(true);
+    fetch(`${backendUrl}/continuation?text=${generatedText.join('\n\n')}`)
+      .then(response => response.json())
+      .then(response => {
+        if (response.status === 200) {
+          console.log(response.text)
+          setGeneratingMore(false);
+          setGeneratedText([...generatedText, response.text]);
+          if (teacherRef.current) teacherRef.current.resetState();
+        // if (vocabRef.current) vocabRef.current.resetState();
+        } else {
+          setGeneratingMore(false);
+          console.log(response);
+        }
+      })
+      .catch((error) => {
+        setGeneratingMore(false);
+        console.error('Error occurred during search:', error);
+      });
+  }
 
 
   const top10Languages = [
@@ -153,7 +172,7 @@ const SearchComponent = () => {
       </form>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          {(generating || generatedText) && <Paper elevation={3} style={{
+          {(generating || generatedText.length>0) && <Paper elevation={3} style={{
             padding: '20px',
             margin: '20px 0',
             lineHeight: '1.7',
@@ -164,12 +183,15 @@ const SearchComponent = () => {
           <Typography variant="h4" gutterBottom>
       {topicGenerated}
     </Typography>
-            {generating && <ProgressBar time={16} />}
-            {generatedText && !generating && <>{generatedText}</>}
+            {generatedText.length>0 && !generating && <>{generatedText.map((block, idx) => 
+              <p key={idx}>{block}</p>
+            )}</>}
+            {(generating || generatingMore) && <ProgressBar time={16} />}
+            {generatedText.length>0 && generatedText.join("").length<3000 && !generatingMore && !generating && <Box sx={{ textAlign: 'right' }}><Button onClick={more}>More</Button></Box>}
             </Paper>}
           </Grid>
           <Grid item xs={12} md={6}>
-          {generatedText && <VocabTrainer
+          {generatedText.length>0 && <VocabTrainer
             ref={vocabRef}
             topic={topic}
             language={language}
@@ -180,7 +202,7 @@ const SearchComponent = () => {
           
       </Grid>
       
-      {generatedText && <FloatingTeacher
+      {generatedText.length>0 && <FloatingTeacher
       ref={teacherRef}
       vocabRef={vocabRef}
       generatedText={generatedText}

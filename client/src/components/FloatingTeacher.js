@@ -1,16 +1,16 @@
-import React, { useState, forwardRef, useEffect, useRef } from 'react';
+import React, { useState, forwardRef, useEffect } from 'react';
 import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popover, Box } from '@mui/material';
 import { Info, Add, AccountCircle } from '@mui/icons-material';
+import './FloatingTeacher.css';
 
 const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency }, ref) => {
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
   const [myInterval, setMyInterval] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [tooltipAnchorEl, setTooltipAnchorEl] = useState(null);
   const [added, setAdded] = useState('');
-
-  const handleRef = useRef(null);
-  const floatingRef = useRef(null);
 
   const resetState = () => {
     setExplanation('');
@@ -34,13 +34,14 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
           //   //setAnchorEl({ top, left, width, height });
           // }
         },
-        250)
+        1000)
       )
     }
 
   }, [myInterval]);
 
-  const explain = () => {
+  const explain = (event) => {
+    event.stopPropagation();
     setGenerating(true);
     fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&topic=${topic}&niveau=${proficiency}`)
       .then(response => response.text())
@@ -55,36 +56,58 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
       });
   }
 
-  const validSelection = selection !== "" && selection.length < 50 && generatedText.includes(selection)
+  const validSelection = selection !== "" && selection.length < 50 && generatedText.join("").includes(selection)
 
-  const addVocab = () => {
+  const addVocab = (event) => {
+    event.stopPropagation();
     if (vocabRef.current) {
       vocabRef.current.addVocab(selection);
       setAdded(selection);
     }
   }
 
+  const handleSpeedDialClick = (event) => {
+    if (selection) return
+    if (!tooltipOpen) {
+        setTimeout(() => {
+        setTooltipOpen(false);
+      }, 2500);
+    }
+    setTooltipOpen(true);
+    setTooltipAnchorEl(event.currentTarget);
+  };
+
+  const handleTooltipClose = () => {
+    setTooltipOpen(false);
+  };
+
   return (
     <>
       <SpeedDial
         ariaLabel="Vocabulary SpeedDial"
-        icon={<Tooltip title="Select vocabulary in the text."><AccountCircle /></Tooltip>}
+        icon={<AccountCircle />}
         open={validSelection || generating}
+        onClick={handleSpeedDialClick}
+        onMouseEnter={handleSpeedDialClick}
         direction="up"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{ position: 'fixed', bottom: 16, right: { xs: 16, md: '47.5%' } }}
       >
         <SpeedDialAction
           key="add"
-          icon={<Tooltip title="Add to vocabulary"><Add /></Tooltip>}
+          tooltipOpen
+          tooltipTitle={`Add to vocabulary`}
+          icon={<Add />}
           onClick={addVocab}
         />
         <SpeedDialAction
         key="explain"
-          icon={<Tooltip title={`Explain "${selection}"`} >{generating ? (
+        tooltipTitle={`Explain "${selection}"`}
+        tooltipOpen
+          icon={generating ? (
             <CircularProgress  />
           ) : (
             <Info />
-          )}</Tooltip>}
+          )}
           onClick={explain}
         />
       </SpeedDial>
@@ -93,9 +116,31 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
         onClose={() => setExplanation('')}
         anchorOrigin={{
           vertical: 'bottom',
-          horizontal: 'left',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
         }}
       ><Box sx={{ p: 2 }}>{explanation}</Box></Popover>}
+      <Tooltip
+        open={tooltipOpen}
+        title="Select text to receive an explanation or add vocabulary."
+        onClose={handleTooltipClose}
+        placement="left"
+        PopperProps={{
+          anchorEl: tooltipAnchorEl,
+          modifiers: [
+            {
+                name: "offset",
+                options: {
+                    offset: [64, 0],
+                },
+            },
+        ],
+        }}
+
+      ><div></div></Tooltip>
       {added !== '' && <Snackbar
         open={added !== ''}
         autoHideDuration={2000}

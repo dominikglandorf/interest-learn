@@ -32,7 +32,7 @@ const selection = () => query('selection')
 const text = () => query('text')
   .notEmpty().withMessage('Text is required')
   .isString().withMessage('Text must be a string')
-  .isLength({ max: 1000 }).withMessage('Text should not exceed 1000 characters');
+  .isLength({ max: 4000 }).withMessage('Text should not exceed 4000 characters');
 
 const vocabulary = () => query('vocabulary')
   .notEmpty().withMessage('Vocabulary is required')

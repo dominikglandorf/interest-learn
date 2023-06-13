@@ -46,10 +46,7 @@ function App() {
       </Toolbar></AppBar>
       <Container>
         <Grid container>
-          <Grid item xs={12}>
-            <Generator />
-          </Grid>
-          {showInstruction && 
+        {showInstruction && 
           <Grid item>
           <p>This app is made for language learning that is actually helpful for your communication. It helps you to acquire vocabulary for the topics that you wish to speak about with your peers.</p>
           <ol><li>Select the language you learn and your current level.</li>
@@ -61,6 +58,10 @@ function App() {
           <li>Import the comma-seperated text file to your favorite flashcard learning platform such as Anki to regularly study and retain the words.</li></ol>
           Language learners who can already read the language and have some basic vocabulary but struggle to understand media designed for a native audience benefit the most. It is highly recommended to actively engage in conversations with a tandem partner at this level of learning.
           </Grid>}
+          <Grid item xs={12}>
+            <Generator />
+          </Grid>
+          
         </Grid>
       </Container>
     </ThemeProvider>

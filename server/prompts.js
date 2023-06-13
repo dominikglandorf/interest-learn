@@ -16,11 +16,11 @@ Vocabulary List:
 ${vocabulary}
 
 Desired Output Format:
-entry, gender, numerosity, ${translationLanguage} translation`
-// `${vocabulary}
+entry, gender, numerosity, ${translationLanguage} translation`;
 
-// Take each entry and annotate it with grammatical information. Also translate it to ${translationLanguage}. Output a .csv list: entry, gender, numerosity, part of speech, translation`;
-// `${vocabulary}
-// List the above ${language} vocabulary items with their article if applicable. Write every ${language} entry in lower case. Add a translation to ${translationLanguage} for each entry in the form "entry, translation"`;
+const continuePrompt = (text) =>
+`Continue the text with a shift in topic. Add interesting information for the reader to keep him engaged. Use the same complexity in grammar and vocabulary.
 
-module.exports = { textPrompt, explainPrompt, vocabularyPrompt, exportPrompt };
+Text: ${text}`
+
+module.exports = { textPrompt, explainPrompt, vocabularyPrompt, exportPrompt, continuePrompt };

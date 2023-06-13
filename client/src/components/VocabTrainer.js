@@ -2,6 +2,7 @@ import React, { useState, forwardRef, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import ProgressBar from './ProgressBar';
 import { Button, Chip, Typography, Grid, TextField, Box } from '@mui/material';
+import { getLanguageName } from './language';
 
 const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency }, ref) => {
   const [generating, setGenerating] = useState(false);
@@ -27,13 +28,15 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   useEffect(() => {
     if (translationLanguage === "" & cookies.language !== "") {
         setTranslationLanguage(cookies.translation_language);
+    } else if (translationLanguage === "") {
+      setTranslationLanguage(getLanguageName(navigator.language))
     }
   }, [translationLanguage, cookies]);
 
   const collect = () => {
     if (generating) return
     setGenerating(true);
-    fetch(`${backendUrl}/vocabulary?text=${generatedText}&language=${language}&&niveau=${proficiency}`)
+    fetch(`${backendUrl}/vocabulary?text=${generatedText.join('\n')}&language=${language}&niveau=${proficiency}`)
       .then(response => response.json())
       .then(data => {
         setGenerating(false);
@@ -87,29 +90,29 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
 
   return (
     <Box sx={{marginTop: 3, marginLeft: 2, marginBottom: 3}}>
-    <Grid container alignItems="center" spacing={1}>
+    <Grid container alignItems="center" spacing={2}>
       <Grid item xs={12}>
         <Typography variant="h5">
         Vocabulary
       </Typography>
         {vocabulary.length > 0 && <> {vocabulary.map(Word)} </>}
         {!vocabulary.length && !generating && <Button onClick={collect}>Auto-extract</Button>}
-        {generating && <ProgressBar width={15} time={6} />}
+        {generating && <ProgressBar time={10} />}
       </Grid>
       {vocabulary.length > 0 && <>
         <Grid item xs={6}>
         <TextField
-        fullWidth
+          fullWidth
+          value={translationLanguage}
           required
           id="topic"
           label="Translation language"
           variant="outlined"
-            type="text"
-            onChange={handleTransLangChange}
+          onChange={handleTransLangChange}
         />
         </Grid>
         <Grid item xs={6}>
-        {!exporting && <Button fullWidth onClick={exportList}>Export</Button>}
+        {!exporting && <Button fullWidth onClick={exportList} disabled={!translationLanguage}>Export</Button>}
         {exporting && <ProgressBar time={vocabulary.length * 1.5} />}
         </Grid>
         </>}

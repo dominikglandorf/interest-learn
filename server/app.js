@@ -3,6 +3,7 @@ const textRouter = require('./text');
 const explanationRouter = require('./explanation');
 const vocabularyRouter = require('./vocabulary');
 const exportRouter = require('./export');
+const continuationRouter = require('./continuation');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/text', textRouter);
 app.use('/explanation', explanationRouter);
 app.use('/vocabulary', vocabularyRouter);
 app.use('/export', exportRouter);
+app.use('/continuation', continuationRouter);
 
 module.exports = app
 
