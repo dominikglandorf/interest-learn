@@ -4,8 +4,11 @@ const explanationRouter = require('./explanation');
 const vocabularyRouter = require('./vocabulary');
 const exportRouter = require('./export');
 const continuationRouter = require('./continuation');
+const tandemRouter = require('./tandem');
 
 const app = express();
+
+app.use(express.json()); // Parse JSON request bodies
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,6 +26,7 @@ app.use('/explanation', explanationRouter);
 app.use('/vocabulary', vocabularyRouter);
 app.use('/export', exportRouter);
 app.use('/continuation', continuationRouter);
+app.use('/tandem', tandemRouter);
 
 module.exports = app
 

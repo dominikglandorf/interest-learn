@@ -3,7 +3,7 @@ import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popove
 import { Info, Add, AccountCircle } from '@mui/icons-material';
 import './FloatingTeacher.css';
 
-const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency }, ref) => {
+const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, tandemRef }, ref) => {
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
   const [myInterval, setMyInterval] = useState(null);
@@ -56,7 +56,8 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
       });
   }
 
-  const validSelection = selection !== "" && selection.length < 50 && generatedText.join("").includes(selection)
+  const chatMessages = tandemRef.current ? tandemRef.current.getMessages().join("") : ""
+  const validSelection = selection !== "" && selection.length < 50 && (generatedText.join("").includes(selection) || chatMessages.includes(selection))
 
   const addVocab = (event) => {
     event.stopPropagation();
@@ -90,7 +91,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
         onClick={handleSpeedDialClick}
         onMouseEnter={handleSpeedDialClick}
         direction="up"
-        sx={{ position: 'fixed', bottom: 16, right: { xs: 16, md: '47.5%' } }}
+        sx={{ position: 'fixed', bottom: "30%", right: { xs: 16, md: '47.5%' } }}
       >
         <SpeedDialAction
           key="add"
@@ -112,6 +113,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
         />
       </SpeedDial>
       {explanation !== '' && <Popover
+        sx={{maxWidth: '1200px'}}
         open={explanation !== ''}
         onClose={() => setExplanation('')}
         anchorOrigin={{

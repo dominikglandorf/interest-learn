@@ -10,6 +10,7 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { Grid, Button, MenuItem, Paper, Typography } from '@mui/material';
+import TandemPartner from './TandemPartner';
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -22,9 +23,11 @@ const SearchComponent = () => {
   const [generatedText, setGeneratedText] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [generatingMore, setGeneratingMore] = useState(false);
+  const [chatStarted, setChatStarted] = useState(false);
 
   const teacherRef = useRef(null);
   const vocabRef = useRef(null);
+  const tandemRef = useRef(null);
 
   useEffect(() => {
     if (language === "" & cookies.language !== "") {
@@ -55,6 +58,8 @@ const SearchComponent = () => {
     event.preventDefault();
     setGenerating(true);
     setTopicGenerated(topic);
+    if (tandemRef.current) tandemRef.current.resetState();
+    setChatStarted(false);
     fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`)
       .then(response => response.json())
       .then(response => {
@@ -98,6 +103,13 @@ const SearchComponent = () => {
       });
   }
 
+  const startChat = () => {
+    if (tandemRef.current) {
+      tandemRef.current.continueConversation()
+      setChatStarted(true);
+    }
+  }
+
 
   const top10Languages = [
     'English',
@@ -114,8 +126,7 @@ const SearchComponent = () => {
     ];
 
   return (
-    <>
-    <Box marginTop={4}>
+    <Grid marginTop={4}>
       <form onSubmit={handleSearch}>
         <Grid alignItems="center" container spacing={2}>
           <Grid item xs={6} md={3}>
@@ -125,7 +136,7 @@ const SearchComponent = () => {
               id="language"
               freeSolo
               value={language}
-              onChange={handleLanguageChange}
+              onInputChange={handleLanguageChange}
               options={top10Languages}
               renderInput={(params) => <TextField {...params} label="Language to learn" />}
             />
@@ -164,7 +175,7 @@ const SearchComponent = () => {
             type="submit"
             variant="contained"
             fullWidth
-            disabled={generating}>
+            disabled={generating || !topic}>
               Generate
           </Button>
           </Grid>
@@ -172,23 +183,36 @@ const SearchComponent = () => {
       </form>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          {(generating || generatedText.length>0) && <Paper elevation={3} style={{
+          {(generating || generatedText.length>0) && <Paper elevation={3} sx={{
             padding: '20px',
             margin: '20px 0',
             lineHeight: '1.7',
             fontSize: '110%',
             fontFamily: 'Hahmlet, serif',
-            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
             hyphens: 'auto'}}>
-          <Typography variant="h4" gutterBottom>
+          <Typography 
+            variant="h4" gutterBottom>
       {topicGenerated}
     </Typography>
             {generatedText.length>0 && !generating && <>{generatedText.map((block, idx) => 
               <p key={idx}>{block}</p>
             )}</>}
             {(generating || generatingMore) && <ProgressBar time={16} />}
-            {generatedText.length>0 && generatedText.join("").length<3000 && !generatingMore && !generating && <Box sx={{ textAlign: 'right' }}><Button onClick={more}>More</Button></Box>}
+            {generatedText.length>0 && !generatingMore && !generating && <Box sx={{ textAlign: 'right' }}>
+              {generatedText.join("").length<3000 && <Button onClick={more}>More</Button>}
+              {!chatStarted && <Button onClick={startChat}>Start chat</Button>}
+            </Box>}
             </Paper>}
+
+            {generatedText.length>0 &&!generating && <TandemPartner
+            ref={tandemRef}
+            vocabRef={vocabRef}
+            generatedText={generatedText}
+            backendUrl={backendUrl}
+            language={language}
+            proficiency={proficiency}
+            topic={topic} />}
           </Grid>
           <Grid item xs={12} md={6}>
           {generatedText.length>0 && <VocabTrainer
@@ -197,21 +221,23 @@ const SearchComponent = () => {
             language={language}
             generatedText={generatedText}
             backendUrl={backendUrl}
-            proficiency={proficiency} />}
+            proficiency={proficiency}
+            textGenerating={generating} />}
           </Grid>
           
       </Grid>
       
-      {generatedText.length>0 && <FloatingTeacher
+      {generatedText.length>0 && !generating && <FloatingTeacher
       ref={teacherRef}
       vocabRef={vocabRef}
+      tandemRef={tandemRef}
       generatedText={generatedText}
       backendUrl={backendUrl}
       language={language}
       proficiency={proficiency}
       topic={topic} />}
-    </Box>
-</>
+
+    </Grid>
   );
 };
 

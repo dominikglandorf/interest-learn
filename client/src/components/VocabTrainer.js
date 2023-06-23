@@ -4,10 +4,11 @@ import ProgressBar from './ProgressBar';
 import { Button, Chip, Typography, Grid, TextField, Box } from '@mui/material';
 import { getLanguageName } from './language';
 
-const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency }, ref) => {
+const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating }, ref) => {
   const [generating, setGenerating] = useState(false);
   const [vocabulary, setVocabulary] = useState([]);
   const [exporting, setExporting] = useState(false);
+  const [checkedSystemLanguage, setCheckedSystemLanguage] = useState(false)
   const [translationLanguage, setTranslationLanguage] = useState('');
   const [cookies, setCookie] = useCookies(['translation_language']);
 
@@ -26,12 +27,15 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   }));
 
   useEffect(() => {
-    if (translationLanguage === "" & cookies.language !== "") {
+    if(!checkedSystemLanguage) {
+      if(cookies.translation_language !== "") {
         setTranslationLanguage(cookies.translation_language);
-    } else if (translationLanguage === "") {
-      setTranslationLanguage(getLanguageName(navigator.language))
+      } else {
+        setTranslationLanguage(getLanguageName(navigator.language))
+      }
+      setCheckedSystemLanguage(true);
     }
-  }, [translationLanguage, cookies]);
+  }, [checkedSystemLanguage, translationLanguage, cookies]);
 
   const collect = () => {
     if (generating) return
@@ -96,7 +100,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
         Vocabulary
       </Typography>
         {vocabulary.length > 0 && <> {vocabulary.map(Word)} </>}
-        {!vocabulary.length && !generating && <Button onClick={collect}>Auto-extract</Button>}
+        {!vocabulary.length && !generating && !textGenerating && <Button onClick={collect}>Auto-extract</Button>}
         {generating && <ProgressBar time={10} />}
       </Grid>
       {vocabulary.length > 0 && <>
