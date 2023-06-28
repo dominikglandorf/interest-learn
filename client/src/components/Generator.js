@@ -28,6 +28,7 @@ const SearchComponent = () => {
   const teacherRef = useRef(null);
   const vocabRef = useRef(null);
   const tandemRef = useRef(null);
+  const generatedTextRef = useRef(null);
 
   useEffect(() => {
     if (language === "" & cookies.language !== "") {
@@ -36,9 +37,10 @@ const SearchComponent = () => {
     if (proficiency === "" & cookies.proficiency !== "") {
       setProficiency(cookies.proficiency);
     }
-    // setTopic("Jetlag")
-    // setGeneratedText(`Le décalage horaire, communément appelé "jetlag", est l'un des effets secondaires les plus frustrants et difficiles à éviter des voyages internationaux. En règle générale, cela se produit lorsque notre rythme circadien est perturbé en raison d'un long vol à travers les fuseaux horaires. Les symptômes varient en fonction de la gravité, mais les plus courants sont la fatigue, les maux de tête, les nausées et même la dépression. Pour éviter les effets du décalage horaire, il est recommandé de se reposer avant de voyager, de bien s'hydrater tout au long du vol et d'ajuster son horloge corporelle en avançant ou en reculant progressivement ses heures de sommeil avant le voyage.`)
-  }, [language, proficiency, cookies]);
+    if (generatedText.length > 0) {
+      generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'})
+    } 
+  }, [language, proficiency, cookies, generatedText]);
 
   const handleLanguageChange = (event, newValue) => {
     setLanguage(newValue);
@@ -125,6 +127,11 @@ const SearchComponent = () => {
     'Portuguese'
     ];
 
+    const clicked = function(event) {
+      event.preventDefault();
+      if (teacherRef.current) teacherRef.current.showContext(event);
+    }
+
   return (
     <Grid marginTop={4}>
       <form onSubmit={handleSearch}>
@@ -183,7 +190,7 @@ const SearchComponent = () => {
       </form>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          {(generating || generatedText.length>0) && <Paper elevation={3} sx={{
+          {(generating || generatedText.length>0) && <Paper ref={generatedTextRef} elevation={3} sx={{
             padding: '20px',
             margin: '20px 0',
             lineHeight: '1.7',
@@ -191,25 +198,26 @@ const SearchComponent = () => {
             fontFamily: 'Hahmlet, serif',
             overflowWrap: 'break-word',
             hyphens: 'auto'}}>
-          <Typography 
-            variant="h4" gutterBottom>
-      {topicGenerated}
-    </Typography>
+            <Typography 
+              variant="h4" gutterBottom>
+              {topicGenerated}
+            </Typography>
             {generatedText.length>0 && !generating && <>{generatedText.map((block, idx) => 
-              <p key={idx}>{block}</p>
+              <p key={idx} onContextMenu={clicked}>{block}</p>
             )}</>}
             {(generating || generatingMore) && <ProgressBar time={16} />}
             {generatedText.length>0 && !generatingMore && !generating && <Box sx={{ textAlign: 'right' }}>
               {generatedText.join("").length<3000 && <Button onClick={more}>More</Button>}
               {!chatStarted && <Button onClick={startChat}>Start chat</Button>}
             </Box>}
-            </Paper>}
+          </Paper>}
 
             {generatedText.length>0 &&!generating && <TandemPartner
             ref={tandemRef}
             vocabRef={vocabRef}
             generatedText={generatedText}
             backendUrl={backendUrl}
+            teacherRef={teacherRef}
             language={language}
             proficiency={proficiency}
             topic={topic} />}

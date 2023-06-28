@@ -1,10 +1,11 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { CircularProgress, Button, Avatar, Paper, Typography, TextField } from '@mui/material';
 
-const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency }, ref) => {
+const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, teacherRef }, ref) => {
     const [messageHistory, setMessageHistory] = useState([]);
     const [loading, setLoading] = useState(false); 
     const [newMessage, setNewMessage] = useState('');
+    const newMessageInput = useRef();
 
 
     const resetState = () => {
@@ -62,6 +63,15 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
         continueConversation
     }));
 
+
+    useEffect(() => {
+      if (messageHistory.length > 0) {
+        newMessageInput.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      
+    }, [messageHistory]);
+    
+
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -73,6 +83,7 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
         {messageHistory.map((message, index) => (
         <Paper
           key={index}
+          ref={index === messageHistory.length - 1 ? newMessageInput : null}
           sx={{
             display: 'flex',
             flexDirection: message.role === 'user' ? 'row-reverse' : 'row',
@@ -80,8 +91,8 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
             padding: 1.5,
             marginBottom: 2,
             width: 0.9,
-            marginLeft: message.role === 'user' ? 8 : 0,
-            marginRight: message.role === 'user' ? 0 : 8,
+            marginLeft: message.role === 'user' ? "10%" : 0,
+            marginRight: message.role === 'user' ? 0 : "10%",
             textAlign: message.role === 'user' ? 'right' : 'left'
           }}
           elevation={2}
@@ -104,6 +115,7 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
           </Typography>
         </Paper>
       ))}
+      
       {loading && <CircularProgress color="success" />}
       {messageHistory.length > 0 && <div
         style={{
@@ -122,6 +134,8 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
           fullWidth
           multiline
           maxRows={3}
+          onFocus={() => teacherRef.current && teacherRef.current.hide()}
+          onBlur={() => teacherRef.current && teacherRef.current.show()}
         />
         <Button
         variant="contained"

@@ -11,34 +11,55 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltipAnchorEl, setTooltipAnchorEl] = useState(null);
   const [added, setAdded] = useState('');
+  const [selectionPos, setSelectionPos] = useState(0);
+  const [hidden, setHidden] = useState(false);
+  
+  const hide = () => setHidden(true);
+  const show = () => setHidden(false);
 
   const resetState = () => {
     setExplanation('');
   }
+
+  const showContext = (event) => {
+    console.log(event)
+  }
+
   React.useImperativeHandle(ref, () => ({
-    resetState
+    resetState,
+    showContext,
+    hide,
+    show
   }));
 
   useEffect(() => {
     if (!myInterval) {
       setMyInterval(
         setInterval(() => {
+
           const currentSelection = document.getSelection();
+          if (currentSelection.toString() !== selection) {
+            if (currentSelection.rangeCount>0) {
+              const range = currentSelection.getRangeAt(0);
+              const rect = range.getBoundingClientRect();
+              if (rect.width > 0) {
+                setSelectionPos(rect.top / window.innerHeight);
+              } else {
+                setSelectionPos(0);
+              }
+            }else {
+              setSelectionPos(0);
+            }
+  
+            
+          }
+
           setSelection(currentSelection.toString());
-          // if (currentSelection.rangeCount > 0) {
-          //   console.log(currentSelection.toString())
-          //   console.log(currentSelection)
-          //   const range = currentSelection.getRangeAt(0);
-          //   const rect = range.getBoundingClientRect();
-          //   const { top, left, width, height } = rect;
-          //   //setAnchorEl({ top, left, width, height });
-          // }
         },
         1000)
       )
     }
-
-  }, [myInterval]);
+  }, [myInterval, selection]);
 
   const explain = (event) => {
     event.stopPropagation();
@@ -57,7 +78,13 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   }
 
   const chatMessages = tandemRef.current ? tandemRef.current.getMessages().join("") : ""
-  const validSelection = selection !== "" && selection.length < 50 && (generatedText.join("").includes(selection) || chatMessages.includes(selection))
+  const validSelection = selection !== "" &&
+    selection.length < 50 &&
+    (
+      generatedText.join("").includes(selection) ||
+      chatMessages.includes(selection) ||
+      explanation.includes(selection)
+    )
 
   const addVocab = (event) => {
     event.stopPropagation();
@@ -82,38 +109,41 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
     setTooltipOpen(false);
   };
 
-  return (
+  const speedDial = <SpeedDial
+  ariaLabel="Vocabulary SpeedDial"
+  icon={<AccountCircle />}
+  open={validSelection || generating}
+  onClick={handleSpeedDialClick}
+  onMouseEnter={handleSpeedDialClick}
+  direction={selectionPos > 0.5 ? "up" : "up"}
+  sx={{ position: 'fixed', top: (explanation === '' ? { xs: (selectionPos < 0.45 ? "70%" : "20%"), md: '50%' } : "30%"), left: { xs: 16, md: '50%' } }}
+>
+  <SpeedDialAction
+    key="add"
+    tooltipOpen
+    tooltipTitle={`Add to vocabulary`}
+    tooltipPlacement="right"
+    icon={<Add />}
+    onClick={addVocab}
+  />
+  <SpeedDialAction
+    key="explain"
+    tooltipTitle={`Explain "${selection}"`}
+    tooltipOpen
+    tooltipPlacement="right"
+    icon={generating ? (
+      <CircularProgress size="1.5rem" />
+    ) : (
+      <Info />
+    )}
+    onClick={explain}
+  />
+</SpeedDial>
+
+
+  return !hidden && (
     <>
-      <SpeedDial
-        ariaLabel="Vocabulary SpeedDial"
-        icon={<AccountCircle />}
-        open={validSelection || generating}
-        onClick={handleSpeedDialClick}
-        onMouseEnter={handleSpeedDialClick}
-        direction="up"
-        sx={{ position: 'fixed', bottom: "30%", right: { xs: 16, md: '47.5%' } }}
-      >
-        <SpeedDialAction
-          key="add"
-          tooltipOpen
-          tooltipTitle={`Add to vocabulary`}
-          icon={<Add />}
-          onClick={addVocab}
-        />
-        <SpeedDialAction
-        key="explain"
-        tooltipTitle={`Explain "${selection}"`}
-        tooltipOpen
-          icon={generating ? (
-            <CircularProgress  />
-          ) : (
-            <Info />
-          )}
-          onClick={explain}
-        />
-      </SpeedDial>
       {explanation !== '' && <Popover
-        sx={{maxWidth: '1200px'}}
         open={explanation !== ''}
         onClose={() => setExplanation('')}
         anchorOrigin={{
@@ -124,7 +154,10 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
           vertical: 'top',
           horizontal: 'center',
         }}
-      ><Box sx={{ p: 2 }}>{explanation}</Box></Popover>}
+        slotProps={{ root: { maxWidth: "1200px" } }}
+      ><Box sx={{ p: 2, maxWidth: '1200px' }}>{explanation}</Box>{speedDial}</Popover>}
+    {explanation === '' && speedDial}
+      
       <Tooltip
         open={tooltipOpen}
         title="Select text to receive an explanation or add vocabulary."
