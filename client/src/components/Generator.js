@@ -230,7 +230,8 @@ const SearchComponent = () => {
             generatedText={generatedText}
             backendUrl={backendUrl}
             proficiency={proficiency}
-            textGenerating={generating} />}
+            textGenerating={generating}
+            teacherRef={teacherRef} />}
           </Grid>
           
       </Grid>

@@ -44,6 +44,11 @@ const bodyText = () => body('text')
 .isString().withMessage('Text must be a string')
 .isLength({ max: 4000 }).withMessage('Text should not exceed 4000 characters');
 
+const bodyMessage = () => body('message')
+.notEmpty().withMessage('Message is required')
+.isString().withMessage('Message must be a string')
+.isLength({ max: 1000 }).withMessage('Message should not exceed 1000 characters');
+
 const vocabulary = () => query('vocabulary')
   .notEmpty().withMessage('Vocabulary is required')
   .isString().withMessage('Vocabulary must be a string')
@@ -74,4 +79,4 @@ const messageHistory = () => body('messageHistory')
     return true;
   });
 
-module.exports = { language, bodyLanguage, translationLanguage, niveau, topic, selection, text, vocabulary, bodyText, messageHistory, validationResult }
+module.exports = { language, bodyLanguage, translationLanguage, niveau, topic, selection, text, vocabulary, bodyText, messageHistory, validationResult, bodyMessage }

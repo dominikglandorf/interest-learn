@@ -154,7 +154,6 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
           vertical: 'top',
           horizontal: 'center',
         }}
-        slotProps={{ root: { maxWidth: "1200px" } }}
       ><Box sx={{ p: 2, maxWidth: '1200px' }}>{explanation}</Box>{speedDial}</Popover>}
     {explanation === '' && speedDial}
       

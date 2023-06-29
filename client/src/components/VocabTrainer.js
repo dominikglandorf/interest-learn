@@ -4,7 +4,7 @@ import ProgressBar from './ProgressBar';
 import { Button, Chip, Typography, Grid, TextField, Box } from '@mui/material';
 import { getLanguageName } from './language';
 
-const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating }, ref) => {
+const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef }, ref) => {
   const [generating, setGenerating] = useState(false);
   const [vocabulary, setVocabulary] = useState([]);
   const [exporting, setExporting] = useState(false);
@@ -113,6 +113,8 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
           label="Translation language"
           variant="outlined"
           onChange={handleTransLangChange}
+          onFocus={() => teacherRef.current && teacherRef.current.hide()}
+          onBlur={() => teacherRef.current && teacherRef.current.show()}
         />
         </Grid>
         <Grid item xs={6}>

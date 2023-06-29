@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { CircularProgress, Button, Avatar, Paper, Typography, TextField } from '@mui/material';
+import { diffWordsWithSpace, diffChars } from 'diff';
 
 const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, teacherRef }, ref) => {
     const [messageHistory, setMessageHistory] = useState([]);
     const [loading, setLoading] = useState(false); 
     const [newMessage, setNewMessage] = useState('');
     const newMessageInput = useRef();
-
 
     const resetState = () => {
         setMessageHistory([]);
@@ -20,17 +20,97 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
         setNewMessage(event.target.value);
       };
 
+     const replaceContent = function(array, searchValue, correctedMessage, correctedContent) {
+        return array.map(item => {
+          if (item.hasOwnProperty('content') && item.content === searchValue) {
+            return { ...item, content: correctedMessage, correctedContent: correctedContent };
+          }
+          return item;
+        });
+      }
+
+      const HighlightChanges = (userMessage, correctedVersion) => {
+        const diff = diffWordsWithSpace(userMessage, correctedVersion);
+ 
+        return (
+          <span>
+            {diff.map((part, index) => {
+              const { added, removed, value } = part;
+              
+              if (index+1 < diff.length) {
+                if (Math.abs(value.length - diff[index + 1].value.length) <= 1) {
+                  const charDiffs = diffChars(value, diff[index + 1].value)
+                  const minorDiffs = charDiffs.filter(diff => (diff.removed | diff.added)).map(diff => diff.count).reduce((a, b) => a + b, 0)
+                  if (minorDiffs>0 & minorDiffs <= 2) {
+                      diff[index + 1].value = ""
+                      return <>{charDiffs.map((charPart, charIndex) => {
+                        const { added, removed, value } = charPart;
+                        if (added) {
+                          return <span key={`${index}${charIndex}`} style={{ color: 'green' }}>{value}</span>;
+                        }
+                        if (removed) {
+                          return <span key={`${index}${charIndex}`} style={{ color: 'red', textDecoration: 'line-through' }}>{value}</span>;
+                        } 
+                        return value
+                      })}
+                      </>
+                  }
+                }
+              }
+      
+              if (added) {
+                return <span key={index} style={{ color: 'green' }}>{value}</span>;
+              }
+              if (removed) {
+                return <span key={index} style={{ color: 'red', textDecoration: 'line-through' }}>{value}</span>;
+              }
+      
+              return value;
+            })}
+          </span>
+        );
+      };
+    
+    const correctMessage = async (message) => {
+      const data = {
+        message: message
+      }
+
+      try {
+        const response = await fetch(`${backendUrl}/correction`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+    
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+    
+        const correctedMessage = await response.text();
+        const improvement = HighlightChanges(message, correctedMessage);
+        setMessageHistory((messageHistory) => replaceContent(messageHistory, message, correctedMessage, improvement))
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
     const continueConversation = async function() {
         setLoading(true);
 
         const history = newMessage ? messageHistory.concat({role: 'user', content: newMessage}) : messageHistory;
-        setNewMessage('');
         setMessageHistory(history);
+        if (newMessage) correctMessage(newMessage);
+        setNewMessage('');
 
         const data = {
             text: generatedText.join(" "),
             language: language,
-            messageHistory: history,
+            messageHistory:  history.map(message => ({
+              role: message.role, content: message.content
+            }))
         }
         
         try {
@@ -47,7 +127,7 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
             }
         
             const messageContent = await response.text();
-            setMessageHistory(history.concat({role: 'assistant', content: messageContent}))
+            setMessageHistory((messageHistory) => messageHistory.concat({role: 'assistant', content: messageContent}))
 
             setLoading(false);
           } catch (error) {
@@ -63,14 +143,11 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
         continueConversation
     }));
 
-
     useEffect(() => {
       if (messageHistory.length > 0) {
         newMessageInput.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
-      
     }, [messageHistory]);
-    
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
@@ -78,6 +155,12 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
             continueConversation();
         }
       };
+      
+    
+    const contextMenu = function(event) {
+      event.preventDefault();
+    }
+  
 
     return <div style={{marginTop: 2, padding: 0, textAlign: 'center'}}>
         {messageHistory.map((message, index) => (
@@ -95,6 +178,7 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
             marginRight: message.role === 'user' ? 0 : "10%",
             textAlign: message.role === 'user' ? 'right' : 'left'
           }}
+          onContextMenu={contextMenu}
           elevation={2}
         >
           <Avatar
@@ -111,7 +195,7 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
 
             lineHeight: 1.7,
             }}>
-            {message.content}
+            {message.hasOwnProperty("correctedContent") ? message.correctedContent : message.content}
           </Typography>
         </Paper>
       ))}
