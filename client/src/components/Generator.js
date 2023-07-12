@@ -11,6 +11,7 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { Grid, Button, MenuItem, Paper, Typography } from '@mui/material';
 import TandemPartner from './TandemPartner';
+import { top15Languages } from './language';
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -28,13 +29,14 @@ const SearchComponent = () => {
   const teacherRef = useRef(null);
   const vocabRef = useRef(null);
   const tandemRef = useRef(null);
+  const generateButtonRef = useRef(null);
   const generatedTextRef = useRef(null);
 
   useEffect(() => {
-    if (language === "" & cookies.language !== "") {
+    if (language === "" & typeof(cookies.language) !== 'undefined') {
       setLanguage(cookies.language);
     }
-    if (proficiency === "" & cookies.proficiency !== "") {
+    if (proficiency === "" & typeof(cookies.proficiency) !== 'undefined') {
       setProficiency(cookies.proficiency);
     }
     if (generatedText.length > 0) {
@@ -113,25 +115,13 @@ const SearchComponent = () => {
   }
 
 
-  const top10Languages = [
-    'English',
-    'German',
-    'French',
-    'Spanish',
-    'Italian',
-    'Russian',
-    'Chinese',
-    'Polish',
-    'Turkish',
-    'Arabic',
-    'Portuguese'
-    ];
+  
 
     const clicked = function(event) {
       event.preventDefault();
       if (teacherRef.current) teacherRef.current.showContext(event);
     }
-
+    
   return (
     <Grid marginTop={4}>
       <form onSubmit={handleSearch}>
@@ -144,10 +134,9 @@ const SearchComponent = () => {
               freeSolo
               value={language}
               onInputChange={handleLanguageChange}
-              options={top10Languages}
+              options={top15Languages}
               renderInput={(params) => <TextField {...params} label="Language to learn" />}
             />
-          
           </Grid>
           <Grid item xs={6} md={3}>
             <FormControl fullWidth>
@@ -179,11 +168,12 @@ const SearchComponent = () => {
         </Grid>
         <Grid item xs={3} md={3}>
           <Button
+            ref={generateButtonRef}
             type="submit"
             variant="contained"
             fullWidth
             disabled={generating || !topic}>
-              Generate
+              {generateButtonRef.current && generateButtonRef.current.getBoundingClientRect().width < 80 ? "Go" : "Generate"}
           </Button>
           </Grid>
         </Grid>

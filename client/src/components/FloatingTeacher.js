@@ -6,6 +6,7 @@ import './FloatingTeacher.css';
 const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, tandemRef }, ref) => {
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
+  const [generatingFor, setGeneratingFor] = useState('');
   const [myInterval, setMyInterval] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -36,7 +37,6 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
     if (!myInterval) {
       setMyInterval(
         setInterval(() => {
-
           const currentSelection = document.getSelection();
           if (currentSelection.toString() !== selection) {
             if (currentSelection.rangeCount>0) {
@@ -50,10 +50,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
             }else {
               setSelectionPos(0);
             }
-  
-            
           }
-
           setSelection(currentSelection.toString());
         },
         1000)
@@ -64,6 +61,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   const explain = (event) => {
     event.stopPropagation();
     setGenerating(true);
+    setGeneratingFor(selection);
     fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&topic=${topic}&niveau=${proficiency}`)
       .then(response => response.text())
       .then(text => {
@@ -128,7 +126,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   />
   <SpeedDialAction
     key="explain"
-    tooltipTitle={`Explain "${selection}"`}
+    tooltipTitle={`Explain "${generating ? generatingFor : selection}"`}
     tooltipOpen
     tooltipPlacement="right"
     icon={generating ? (
@@ -161,7 +159,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
         open={tooltipOpen}
         title="Select text to receive an explanation or add vocabulary."
         onClose={handleTooltipClose}
-        placement="left"
+        placement="right"
         PopperProps={{
           anchorEl: tooltipAnchorEl,
           modifiers: [

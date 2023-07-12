@@ -1,8 +1,8 @@
 import React, { useState, forwardRef, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import ProgressBar from './ProgressBar';
-import { Button, Chip, Typography, Grid, TextField, Box } from '@mui/material';
-import { getLanguageName } from './language';
+import { Button, Chip, Typography, Grid, TextField, Box, Autocomplete } from '@mui/material';
+import { getLanguageName, languageNames } from './language';
 
 const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef }, ref) => {
   const [generating, setGenerating] = useState(false);
@@ -25,10 +25,10 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
     resetState,
     addVocab
   }));
-
+  console.log(checkedSystemLanguage);
   useEffect(() => {
     if(!checkedSystemLanguage) {
-      if(cookies.translation_language !== "") {
+      if(typeof(cookies.translation_language) !== "undefined") {
         setTranslationLanguage(cookies.translation_language);
       } else {
         setTranslationLanguage(getLanguageName(navigator.language))
@@ -87,9 +87,9 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   }}
   onDelete={()=>removeFromVocab(name)}>{}</Chip>
 
-  const handleTransLangChange = (event) => {
-    setTranslationLanguage(event.target.value);
-    setCookie('translation_language', event.target.value, { path: '/interest-learn' });
+  const handleTransLangChange = (event, newValue) => {
+    setTranslationLanguage(newValue);
+    setCookie('translation_language', newValue, { path: '/interest-learn' });
   };
 
   return (
@@ -105,17 +105,19 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
       </Grid>
       {vocabulary.length > 0 && <>
         <Grid item xs={6}>
-        <TextField
-          fullWidth
-          value={translationLanguage}
-          required
-          id="topic"
-          label="Translation language"
-          variant="outlined"
-          onChange={handleTransLangChange}
-          onFocus={() => teacherRef.current && teacherRef.current.hide()}
-          onBlur={() => teacherRef.current && teacherRef.current.show()}
-        />
+        
+        <Autocomplete
+            required
+            fullWidth
+            id="language"
+            freeSolo
+            value={translationLanguage}
+            onInputChange={handleTransLangChange}
+            options={Object.values(languageNames)}
+            onFocus={() => teacherRef.current && teacherRef.current.hide()}
+            onBlur={() => teacherRef.current && teacherRef.current.show()}
+            renderInput={(params) => <TextField {...params} label="Your language" />}
+          />
         </Grid>
         <Grid item xs={6}>
         {!exporting && <Button fullWidth onClick={exportList} disabled={!translationLanguage}>Export</Button>}
