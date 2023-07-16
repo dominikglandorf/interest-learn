@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useEffect } from 'react';
-import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popover, Box } from '@mui/material';
+import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popover, Box, useMediaQuery } from '@mui/material';
 import { Info, Add, AccountCircle } from '@mui/icons-material';
 import './FloatingTeacher.css';
 
@@ -77,9 +77,9 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
 
   const chatMessages = tandemRef.current ? tandemRef.current.getMessages().join("") : ""
   const validSelection = selection !== "" &&
-    selection.length < 50 &&
+    selection.length < 75 &&
     (
-      generatedText.join("").includes(selection) ||
+      generatedText.includes(selection) ||
       chatMessages.includes(selection) ||
       explanation.includes(selection)
     )
@@ -113,8 +113,8 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   open={validSelection || generating}
   onClick={handleSpeedDialClick}
   onMouseEnter={handleSpeedDialClick}
-  direction={selectionPos > 0.5 ? "up" : "up"}
-  sx={{ position: 'fixed', top: (explanation === '' ? { xs: (selectionPos < 0.45 ? "70%" : "20%"), md: '50%' } : "30%"), left: { xs: 16, md: '50%' } }}
+  direction={useMediaQuery((theme) => theme.breakpoints.down('md')) & (selectionPos < 0.5 | explanation !== '') ? "down" : "up"}
+  sx={{ position: 'fixed', top: { xs: (explanation !== '' ? "10%" : (selectionPos < 0.5 ? "50%" : "20%")), md: '50%' }, left: { xs: 16, md: '50%' } }}
 >
   <SpeedDialAction
     key="add"
@@ -141,7 +141,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
 
   return !hidden && (
     <>
-      {explanation !== '' && <Popover
+      {explanation && <Popover
         open={explanation !== ''}
         onClose={() => setExplanation('')}
         anchorOrigin={{
@@ -153,8 +153,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
           horizontal: 'center',
         }}
       ><Box sx={{ p: 2, maxWidth: '1200px' }}>{explanation}</Box>{speedDial}</Popover>}
-    {explanation === '' && speedDial}
-      
+      {!explanation && speedDial}
       <Tooltip
         open={tooltipOpen}
         title="Select text to receive an explanation or add vocabulary."
@@ -166,7 +165,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
             {
                 name: "offset",
                 options: {
-                    offset: [64, 0],
+                    offset: [64 * (selectionPos < 0.5 ? -1 : 1), 0],
                 },
             },
         ],

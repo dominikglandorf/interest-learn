@@ -6,7 +6,7 @@ const { openai, MODEL, MOCK } = require('./configuration');
 const router = express.Router();
 
 const sanitize = (info) => {
-    return info.replace("N/A", "-").trim()
+    return info.replace("N/A", "-").replace("n/a", "-").trim()
 }
 
 const extractPairs = (response) => {
@@ -27,7 +27,7 @@ router.get('', [
     // Check for validation errors
     const errors = validation.validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json(errors.array());
     }
 
     const language = req.query.language;
@@ -61,19 +61,18 @@ les méthodes efficaces, die effektiven Methoden
 les objectifs d'apprentissage spécifiques, die spezifischen Lernziele
 Please note that some words may not require articles in certain contexts, but I have provided them based on their usage in general phrases. Let me know if you have any more questions!`));
     }
-    
-    const completion = await openai.createChatCompletion({
-        model: MODEL,
-        messages: [{role: "user", content: exportPrompt(vocabulary, language, translationLanguage)}],
-    });
+    try {
+        const completion = await openai.chat.completions.create({
+            model: MODEL,
+            messages: [{role: "user", content: exportPrompt(vocabulary, language, translationLanguage)}],
+        });
 
-    if (completion.status != 200) {
-        console.log(completion);
-        res.send(`Error: ${completion.statusText}`);
+        const vocab = extractPairs(completion.choices[0].message.content)
+        return res.send(vocab);
+    } catch (error) {
+        console.error("An error occurred:", error);
+        return res.status(400).json(error);
     }
-    console.log(completion.data.choices[0].message.content);
-    const vocab = extractPairs(completion.data.choices[0].message.content)
-    return res.send(vocab);
 });
 
 module.exports = router

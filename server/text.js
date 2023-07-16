@@ -20,42 +20,30 @@ router.get('', [
     const niveau = req.query.niveau;
     const topic = req.query.topic;
 
-    console.log(textPrompt(language, topic, niveau))
-
     if (MOCK) {
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
         await sleep(200);
-        return res.json({
-            "status": 200,
-            "text": "Lorsque vous apprenez une langue, il est crucial d'obtenir du contenu personnalisé pour vous motiver et vous aider à comprendre la langue en question. Le contenu personnalisé en apprentissage de langues est disponible grâce aux ressources technologiques modernes telles que les applications mobiles, les vidéos en ligne et les logiciels éducatifs. Ces derniers permettent aux apprenants de travailler sur leurs points faibles et d'améliorer leurs compétences linguistiques, que ce soit en grammaire, en vocabulaire, en expression orale ou en compréhension écrite. De nos jours, l'enseignement personnalisé est considéré comme l'une des méthodes les plus efficaces pour apprendre une langue et atteindre des objectifs d'apprentissage spécifiques."
-        });
+        return res.send("Lorsque vous apprenez une langue, il est crucial d'obtenir du contenu personnalisé pour vous motiver et vous aider à comprendre la langue en question. Le contenu personnalisé en apprentissage de langues est disponible grâce aux ressources technologiques modernes telles que les applications mobiles, les vidéos en ligne et les logiciels éducatifs. Ces derniers permettent aux apprenants de travailler sur leurs points faibles et d'améliorer leurs compétences linguistiques, que ce soit en grammaire, en vocabulaire, en expression orale ou en compréhension écrite. De nos jours, l'enseignement personnalisé est considéré comme l'une des méthodes les plus efficaces pour apprendre une langue et atteindre des objectifs d'apprentissage spécifiques.");
     }
     
     try {
-        const completion = await openai.createChatCompletion({
+        const stream = await openai.chat.completions.create({
             model: MODEL,
             messages: [{role: "user", content: textPrompt(language, topic, niveau)}],
+            stream: true
         });
 
-        if (completion.status != 200) {
-            res.json({
-                "status": completion.status,
-                "statusText": completion.statusText
-            });
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        for await (const part of stream) {
+            res.write(part.choices[0]?.delta.content || '');
         }
-
-        return res.json({
-            "status": 200,
-            "text": completion.data.choices[0].message.content
-        });
+        return res.end()
      } catch (error) {
         console.error("An error occurred:", error);
-        return res.json({
-            "status": 200,
-            "statusText": error.text
-        });
+        return res.status(400).json(error);
     }
 });
 

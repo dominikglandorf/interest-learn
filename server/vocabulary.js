@@ -31,7 +31,7 @@ router.get('', [
     // Check for validation errors
     const errors = validation.validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json(errors.array());
     }
 
     const language = req.query.language;
@@ -46,18 +46,18 @@ router.get('', [
         return res.send(convertCommaSeparatedList("langue, contenu personnalisé, motiver, comprendre, ressources technologiques modernes, applications mobiles, vidéos en ligne, logiciels éducatifs, apprenants, points faibles, compétences linguistiques, grammaire, vocabulaire, expression orale, compréhension écrite, enseignement personnalisé, méthodes efficaces, objectifs d'apprentissage spécifiques"));
     }
     
-    const completion = await openai.createChatCompletion({
-        model: MODEL,
-        messages: [{role: "user", content: vocabularyPrompt(language, niveau, text)}],
-    });
-
-    if (completion.status != 200) {
-        console.log(completion);
-        res.send(`Error: ${completion.statusText}`);
+    try {
+        const completion = await openai.chat.completions.create({
+            model: MODEL,
+            messages: [{role: "user", content: vocabularyPrompt(language, niveau, text)}],
+        });
+    
+        const vocab = convertCommaSeparatedList(completion.choices[0].message.content)
+        return res.send(vocab);
+    } catch (error) {
+        console.error("An error occurred:", error);
+        return res.status(400).json(error);
     }
-
-    const vocab = convertCommaSeparatedList(completion.data.choices[0].message.content)
-    return res.send(vocab);
 });
 
 module.exports = router

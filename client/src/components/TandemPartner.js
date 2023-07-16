@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
-import { CircularProgress, Button, Avatar, Paper, Typography, TextField } from '@mui/material';
+import { Button, Avatar, Paper, Typography, TextField } from '@mui/material';
 import { diffWordsWithSpace, diffChars } from 'diff';
+import './TandemPartner.css';
 
 const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, teacherRef }, ref) => {
     const [messageHistory, setMessageHistory] = useState([]);
@@ -99,42 +100,58 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
 
     const continueConversation = async function() {
         setLoading(true);
-
         const history = newMessage ? messageHistory.concat({role: 'user', content: newMessage}) : messageHistory;
         setMessageHistory(history);
-        if (newMessage) correctMessage(newMessage);
-        setNewMessage('');
-
+        if (newMessage) {
+          correctMessage(newMessage);
+          setNewMessage('');
+        }
+        
         const data = {
-            text: generatedText.join(" "),
+            text: generatedText,
             language: language,
-            messageHistory:  history.map(message => ({
+            messageHistory: history.map(message => ({
               role: message.role, content: message.content
             }))
         }
-        
-        try {
-            const response = await fetch(`${backendUrl}/tandem`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(data),
-            });
-        
-            if (!response.ok) {
-              throw new Error('Request failed');
-            }
-        
-            const messageContent = await response.text();
-            setMessageHistory((messageHistory) => messageHistory.concat({role: 'assistant', content: messageContent}))
 
-            setLoading(false);
-          } catch (error) {
-            console.error('Error:', error);
-            // Handle error here
-            setLoading(false);
+        try {
+          const response = await fetch(`${backendUrl}/tandem`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          });
+          if (response.status !== 200) {
+            console.log(await response.json());
+            return;
           }
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          
+          let content = '';
+
+          setMessageHistory((messageHistory) => messageHistory.concat({role: 'assistant', content: ''}));
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              setLoading(false);
+              break;
+            }
+            content += decoder.decode(value);
+          }
+
+          setMessageHistory((messageHistory) => {
+            messageHistory.slice(-1)[0].content = content;
+            return messageHistory
+          })
+        } catch (error) {
+          console.error('Error:', error);
+          // Handle error here
+          setLoading(false);
+        }
     }
 
     React.useImperativeHandle(ref, () => ({
@@ -192,15 +209,19 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
           <Typography variant="body1" sx={{
               marginLeft: message.role === 'user' ? 0 : 1.5,
               marginRight: message.role === 'user' ? 1.5 : 0,
-
-            lineHeight: 1.7,
+              lineHeight: 1.7,
             }}>
             {message.hasOwnProperty("correctedContent") ? message.correctedContent : message.content}
           </Typography>
+          {loading && index === messageHistory.length - 1 && message.role !== 'user' &&
+          <div className="typing">
+              <div className="typing__dot"></div>
+              <div className="typing__dot"></div>
+              <div className="typing__dot"></div>
+            </div>}
         </Paper>
       ))}
       
-      {loading && <CircularProgress color="success" />}
       {messageHistory.length > 0 && <div
         style={{
           display: 'flex',

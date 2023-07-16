@@ -12,7 +12,7 @@ router.post('', [
     // Check for validation errors
     const errors = validation.validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json(errors.array());
     }
 
     const text = req.body.text;
@@ -27,17 +27,23 @@ router.post('', [
         {role: "system", content: `You are a ${language} speaking tandem partner and we just met. You have also read this text: ${text}. Involve me into a conversation with two questions related to the text in a natural way. Do not answer your questions.`},
     ]
 
-    const completion = await openai.createChatCompletion({
-        model: MODEL,
-        messages: messages.concat(messageHistory),
-    });
+    try {
+        const stream = await openai.chat.completions.create({
+            model: MODEL,
+            messages: messages.concat(messageHistory),
+            stream: true
+        });
 
-    if (completion.status != 200) {
-        console.log(completion);
-        res.send(`Error: ${completion.statusText}`);
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        for await (const part of stream) {
+            res.write(part.choices[0]?.delta.content || '');
+        }
+        return res.end()
+     } catch (error) {
+        console.error("An error occurred:", error);
+        return res.status(400).json(error);
     }
-
-    return res.send(completion.data.choices[0].message.content);
 });
 
 module.exports = router

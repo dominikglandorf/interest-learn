@@ -1,17 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCookies } from 'react-cookie';
-import ProgressBar from './ProgressBar';
 import FloatingTeacher from './FloatingTeacher';
 import VocabTrainer from './VocabTrainer';
-import Autocomplete from '@mui/material/Autocomplete'
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
-import { Grid, Button, MenuItem, Paper, Typography } from '@mui/material';
 import TandemPartner from './TandemPartner';
 import { top15Languages } from './language';
+import { Grid, Button, MenuItem, Paper, Typography, Alert, Snackbar, Select, FormControl, InputLabel, Box, TextField, Autocomplete } from '@mui/material';
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -21,16 +14,18 @@ const SearchComponent = () => {
   const [proficiency, setProficiency] = useState('');
   const [topic, setTopic] = useState('');
   const [topicGenerated, setTopicGenerated] = useState('');
-  const [generatedText, setGeneratedText] = useState([]);
+  const [generatedText, setGeneratedText] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatingMore, setGeneratingMore] = useState(false);
   const [chatStarted, setChatStarted] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   const teacherRef = useRef(null);
   const vocabRef = useRef(null);
   const tandemRef = useRef(null);
   const generateButtonRef = useRef(null);
   const generatedTextRef = useRef(null);
+  const topicFieldRef = useRef(null);
 
   useEffect(() => {
     if (language === "" & typeof(cookies.language) !== 'undefined') {
@@ -39,10 +34,8 @@ const SearchComponent = () => {
     if (proficiency === "" & typeof(cookies.proficiency) !== 'undefined') {
       setProficiency(cookies.proficiency);
     }
-    if (generatedText.length > 0) {
-      generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'})
-    } 
-  }, [language, proficiency, cookies, generatedText]);
+    generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, [language, proficiency, cookies, generatedTextRef]);
 
   const handleLanguageChange = (event, newValue) => {
     setLanguage(newValue);
@@ -58,53 +51,63 @@ const SearchComponent = () => {
     setTopic(event.target.value);
   };
 
-  const handleSearch = (event) => {
+  const handleSearch = async (event) => {
     event.preventDefault();
     setGenerating(true);
     setTopicGenerated(topic);
-    if (tandemRef.current) tandemRef.current.resetState();
+
+    const response = await fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`);
+    if (response.status !== 200) {
+      setShowError(true);
+      setGenerating(false);
+      console.log(await response.json());
+      return;
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    teacherRef.current?.resetState();
+    tandemRef.current?.resetState();
+
     setChatStarted(false);
-    fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`)
-      .then(response => response.json())
-      .then(response => {
-        if (response.status === 200) {
-          console.log(response.text)
-          setGenerating(false);
-          setGeneratedText([response.text]);
-          if (teacherRef.current) teacherRef.current.resetState();
-        // if (vocabRef.current) vocabRef.current.resetState();
-        } else {
-          setGenerating(false);
-        }
-        
-      })
-      .catch((error) => {
+    setTopic('');
+    topicFieldRef.current?.blur();
+    setGeneratedText('');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
         setGenerating(false);
-        console.error('Error occurred during search:', error);
-      });
-      
+        return;
+      }
+      setGeneratedText((text) => text + decoder.decode(value));
+    }
   };
 
-  const more = () => {
+  const more = async () => {
     setGeneratingMore(true);
-    fetch(`${backendUrl}/continuation?text=${generatedText.join('\n\n')}`)
-      .then(response => response.json())
-      .then(response => {
-        if (response.status === 200) {
-          console.log(response.text)
-          setGeneratingMore(false);
-          setGeneratedText([...generatedText, response.text]);
-          if (teacherRef.current) teacherRef.current.resetState();
-        // if (vocabRef.current) vocabRef.current.resetState();
-        } else {
-          setGeneratingMore(false);
-          console.log(response);
-        }
-      })
-      .catch((error) => {
+
+    const response = await fetch(`${backendUrl}/continuation?text=${generatedText}`);
+    if (response.status !== 200) {
+      setShowError(true);
+      console.log(await response.json());
+      setGeneratingMore(false);
+      return;
+    }
+    if (teacherRef.current) teacherRef.current.resetState();
+    setGeneratedText((text) => text + "\n\n");
+    // generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
         setGeneratingMore(false);
-        console.error('Error occurred during search:', error);
-      });
+        return;
+      }
+      setGeneratedText((text) => text + decoder.decode(value));
+    }
   }
 
   const startChat = () => {
@@ -114,13 +117,10 @@ const SearchComponent = () => {
     }
   }
 
-
-  
-
-    const clicked = function(event) {
-      event.preventDefault();
-      if (teacherRef.current) teacherRef.current.showContext(event);
-    }
+  const clicked = function(event) {
+    event.preventDefault();
+    if (teacherRef.current) teacherRef.current.showContext(event);
+  }
     
   return (
     <Grid marginTop={4}>
@@ -157,6 +157,7 @@ const SearchComponent = () => {
         </Grid>
         <Grid item xs={9} md={3}>
           <TextField
+            ref={topicFieldRef}
             fullWidth
             required
             value={topic}
@@ -164,6 +165,9 @@ const SearchComponent = () => {
             label="Topic (in any language)"
             variant="outlined"
             onChange={handleTopicChange}
+            onFocus={() => teacherRef.current && teacherRef.current.hide()}
+            onBlur={() => teacherRef.current && teacherRef.current.show()}
+            inputProps={{type: 'search'}}
           />
         </Grid>
         <Grid item xs={3} md={3}>
@@ -172,7 +176,7 @@ const SearchComponent = () => {
             type="submit"
             variant="contained"
             fullWidth
-            disabled={generating || !topic}>
+            disabled={generating || generatingMore || !topic}>
               {generateButtonRef.current && generateButtonRef.current.getBoundingClientRect().width < 80 ? "Go" : "Generate"}
           </Button>
           </Grid>
@@ -180,7 +184,7 @@ const SearchComponent = () => {
       </form>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          {(generating || generatedText.length>0) && <Paper ref={generatedTextRef} elevation={3} sx={{
+          {(topicGenerated) && <Paper ref={generatedTextRef} elevation={3} sx={{
             padding: '20px',
             margin: '20px 0',
             lineHeight: '1.7',
@@ -192,17 +196,14 @@ const SearchComponent = () => {
               variant="h4" gutterBottom>
               {topicGenerated}
             </Typography>
-            {generatedText.length>0 && !generating && <>{generatedText.map((block, idx) => 
-              <p key={idx} onContextMenu={clicked}>{block}</p>
-            )}</>}
-            {(generating || generatingMore) && <ProgressBar time={16} />}
-            {generatedText.length>0 && !generatingMore && !generating && <Box sx={{ textAlign: 'right' }}>
-              {generatedText.join("").length<3000 && <Button onClick={more}>More</Button>}
-              {!chatStarted && <Button onClick={startChat}>Start chat</Button>}
+            {generatedText && <p style={{ whiteSpace: "pre-line" }} onContextMenu={clicked}>{generatedText}</p>}
+            {generatedText && !generating && <Box sx={{ textAlign: 'right' }}>
+              {generatedText.length < 3000 && <Button onClick={more} disabled={generatingMore}>More</Button>}
+              {!chatStarted && <Button onClick={startChat} disabled={generatingMore}>Start chat</Button>}
             </Box>}
           </Paper>}
 
-            {generatedText.length>0 &&!generating && <TandemPartner
+            {generatedText.length > 0 && <TandemPartner
             ref={tandemRef}
             vocabRef={vocabRef}
             generatedText={generatedText}
@@ -210,12 +211,12 @@ const SearchComponent = () => {
             teacherRef={teacherRef}
             language={language}
             proficiency={proficiency}
-            topic={topic} />}
+            topic={topicGenerated} />}
           </Grid>
           <Grid item xs={12} md={6}>
-          {generatedText.length>0 && <VocabTrainer
+          {generatedText.length > 0 && <VocabTrainer
             ref={vocabRef}
-            topic={topic}
+            topic={topicGenerated}
             language={language}
             generatedText={generatedText}
             backendUrl={backendUrl}
@@ -226,7 +227,7 @@ const SearchComponent = () => {
           
       </Grid>
       
-      {generatedText.length>0 && !generating && <FloatingTeacher
+      {generatedText.length > 0 && <FloatingTeacher
       ref={teacherRef}
       vocabRef={vocabRef}
       tandemRef={tandemRef}
@@ -234,8 +235,11 @@ const SearchComponent = () => {
       backendUrl={backendUrl}
       language={language}
       proficiency={proficiency}
-      topic={topic} />}
+      topic={topicGenerated} />}
 
+      <Snackbar open={showError} autoHideDuration={5000} onClose={() => setShowError(false)}>
+        <Alert severity="error">An error occurred! Please try again.</Alert>
+      </Snackbar>
     </Grid>
   );
 };

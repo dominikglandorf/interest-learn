@@ -1,7 +1,8 @@
 import React, { useState, forwardRef, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import ProgressBar from './ProgressBar';
-import { Button, Chip, Typography, Grid, TextField, Box, Autocomplete } from '@mui/material';
+import { Button, Chip, Typography, Grid, TextField, Box, Autocomplete, IconButton } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { getLanguageName, languageNames } from './language';
 
 const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef }, ref) => {
@@ -21,11 +22,12 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
     setExporting(false);
     setVocabulary([]);
   }
+  
   React.useImperativeHandle(ref, () => ({
     resetState,
     addVocab
   }));
-  console.log(checkedSystemLanguage);
+
   useEffect(() => {
     if(!checkedSystemLanguage) {
       if(typeof(cookies.translation_language) !== "undefined") {
@@ -40,11 +42,13 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   const collect = () => {
     if (generating) return
     setGenerating(true);
-    fetch(`${backendUrl}/vocabulary?text=${generatedText.join('\n')}&language=${language}&niveau=${proficiency}`)
+    fetch(`${backendUrl}/vocabulary?text=${generatedText}&language=${language}&niveau=${proficiency}`)
       .then(response => response.json())
       .then(data => {
         setGenerating(false);
-        setVocabulary(data);
+        for (const idx in data) {
+          if (!vocabulary.includes(data[idx])) setVocabulary((vocab) => vocab.concat([data[idx]]));
+        }
       })
       .catch((error) => {
         setGenerating(false);
@@ -92,16 +96,18 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
     setCookie('translation_language', newValue, { path: '/interest-learn' });
   };
 
+  const deleteVocab = () => setVocabulary([]);
+
   return (
     <Box sx={{marginTop: 3, marginLeft: 2, marginBottom: 3}}>
     <Grid container alignItems="center" spacing={2}>
       <Grid item xs={12}>
         <Typography variant="h5">
-        Vocabulary
+        Vocabulary {vocabulary.length > 0 && <IconButton onClick={deleteVocab} aria-label="delete"><DeleteIcon /></IconButton>}
       </Typography>
         {vocabulary.length > 0 && <> {vocabulary.map(Word)} </>}
-        {!vocabulary.length && !generating && !textGenerating && <Button onClick={collect}>Auto-extract</Button>}
-        {generating && <ProgressBar time={10} />}
+        {!generating && !textGenerating && <Button onClick={collect}>Auto-extract</Button>}
+        {generating && <ProgressBar time={generatedText.length / 200} />}
       </Grid>
       {vocabulary.length > 0 && <>
         <Grid item xs={6}>

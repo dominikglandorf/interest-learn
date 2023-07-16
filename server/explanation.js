@@ -26,17 +26,17 @@ router.get('', [
         return res.send("Lorsque vous apprenez une langue, il est crucial d'obtenir du contenu personnalisé pour vous motiver et vous aider à comprendre la langue en question. Le contenu personnalisé en apprentissage de langues est disponible grâce aux ressources technologiques modernes telles que les applications mobiles, les vidéos en ligne et les logiciels éducatifs. Ces derniers permettent aux apprenants de travailler sur leurs points faibles et d'améliorer leurs compétences linguistiques, que ce soit en grammaire, en vocabulaire, en expression orale ou en compréhension écrite. De nos jours, l'enseignement personnalisé est considéré comme l'une des méthodes les plus efficaces pour apprendre une langue et atteindre des objectifs d'apprentissage spécifiques.");
     }
 
-    const completion = await openai.createChatCompletion({
-        model: MODEL,
-        messages: [{role: "user", content: explainPrompt(selection, topic, language, niveau)}],
-    });
-
-    if (completion.status != 200) {
-        console.log(completion);
-        res.send(`Error: ${completion.statusText}`);
+    try {
+        const completion = await openai.chat.completions.create({
+            model: MODEL,
+            messages: [{role: "user", content: explainPrompt(selection, topic, language, niveau)}],
+        });
+    
+        return res.send(completion.choices[0].message.content);
+     } catch (error) {
+        console.error("An error occurred:", error);
+        return res.status(400).json(error);
     }
-
-    return res.send(completion.data.choices[0].message.content);
 });
 
 module.exports = router
