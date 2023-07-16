@@ -114,7 +114,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   onClick={handleSpeedDialClick}
   onMouseEnter={handleSpeedDialClick}
   direction={useMediaQuery((theme) => theme.breakpoints.down('md')) & (selectionPos < 0.5 | explanation !== '') ? "down" : "up"}
-  sx={{ position: 'fixed', top: { xs: (explanation !== '' ? "10%" : (selectionPos < 0.5 ? "50%" : "20%")), md: '50%' }, left: { xs: 16, md: '50%' } }}
+  sx={{ position: 'fixed', top: { xs: (explanation !== '' ? "10%" : (selectionPos < 0.5 ? "50%" : "20%")), md: (explanation !== '' ? '30%' : '50%') }, left: { xs: 16, md: '50%' } }}
 >
   <SpeedDialAction
     key="add"

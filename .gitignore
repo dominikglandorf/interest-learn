@@ -35,3 +35,5 @@ tmp/
 lambda.js
 claudia.json
 env.json
+
+*.pem

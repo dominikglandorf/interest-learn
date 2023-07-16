@@ -7,7 +7,8 @@
     "start": "node app.local.js",
     "debug": "nodemon --inspect app.local.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "claudia update --handler lambda.handler --deploy-proxy-api --region eu-central-1 --set-env-from-json env.json"
+    "deploy-prod": "claudia update --handler lambda.handler --deploy-proxy-api --region eu-central-1 --set-env-from-json env.json --version production",
+    "deploy-stage": "claudia update --handler lambda.handler --deploy-proxy-api --region eu-central-1 --set-env-from-json env.json --version stage"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +17,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
+    "https": "^1.0.0",
     "openai": "^4.0.0-beta.4"
   }
 }
