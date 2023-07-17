@@ -39,12 +39,12 @@ const SearchComponent = () => {
 
   const handleLanguageChange = (event, newValue) => {
     setLanguage(newValue);
-    setCookie('language', newValue, { path: '/interest-learn' });
+    setCookie('language', newValue, { path: process.env.REACT_APP_BASENAME });
   };
 
   const handleProficiencyChange = (event) => {
     setProficiency(event.target.value);
-    setCookie('proficiency', event.target.value, { path: '/interest-learn' });
+    setCookie('proficiency', event.target.value, { path: process.env.REACT_APP_BASENAME });
   };
 
   const handleTopicChange = (event) => {

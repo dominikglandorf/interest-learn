@@ -93,7 +93,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
 
   const handleTransLangChange = (event, newValue) => {
     setTranslationLanguage(newValue);
-    setCookie('translation_language', newValue, { path: '/interest-learn' });
+    setCookie('translation_language', newValue, { path: process.env.REACT_APP_BASENAME });
   };
 
   const deleteVocab = () => setVocabulary([]);
