@@ -115,6 +115,8 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
             }))
         }
 
+        setMessageHistory((messageHistory) => messageHistory.concat({role: 'assistant', content: ''}));
+
         try {
           const response = await fetch(`${backendUrl}/tandem`, {
             method: 'POST',
@@ -132,7 +134,7 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
           
           let content = '';
 
-          setMessageHistory((messageHistory) => messageHistory.concat({role: 'assistant', content: ''}));
+          
           
           while (true) {
             const { done, value } = await reader.read();

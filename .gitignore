@@ -37,3 +37,4 @@ claudia.json
 env.json
 
 *.pem
+*deploy*
