@@ -107,13 +107,14 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
     setTooltipOpen(false);
   };
 
+  const largeScreen = !useMediaQuery((theme) => theme.breakpoints.down('md'));
   const speedDial = <SpeedDial
   ariaLabel="Vocabulary SpeedDial"
   icon={<AccountCircle />}
   open={validSelection || generating}
   onClick={handleSpeedDialClick}
   onMouseEnter={handleSpeedDialClick}
-  direction={useMediaQuery((theme) => theme.breakpoints.down('md')) & (selectionPos < 0.5 | explanation !== '') ? "down" : "up"}
+  direction={!largeScreen & (selectionPos < 0.5 | explanation !== '') ? "down" : "up"}
   sx={{ position: 'fixed', top: { xs: (explanation !== '' ? "10%" : (selectionPos < 0.5 ? "50%" : "20%")), md: (explanation !== '' ? '30%' : '50%') }, left: { xs: 16, md: '50%' } }}
 >
   <SpeedDialAction
@@ -165,7 +166,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
             {
                 name: "offset",
                 options: {
-                    offset: [64 * (selectionPos < 0.5 ? -1 : 1), 0],
+                    offset: [(largeScreen ? 64 : 64 * (selectionPos < 0.5 ? -1 : 1)), 0],
                 },
             },
         ],

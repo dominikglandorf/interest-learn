@@ -34,6 +34,8 @@ router.get('', [
 
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('X-Accel-Buffering', 'no');
         for await (const part of stream) {
             res.write(part.choices[0]?.delta.content || '');
         }

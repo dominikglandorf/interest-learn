@@ -4,6 +4,7 @@ import FloatingTeacher from './FloatingTeacher';
 import VocabTrainer from './VocabTrainer';
 import TandemPartner from './TandemPartner';
 import { top15Languages } from './language';
+import './typing.css';
 import { Grid, Button, MenuItem, Paper, Typography, Alert, Snackbar, Select, FormControl, InputLabel, Box, TextField, Autocomplete } from '@mui/material';
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
@@ -53,8 +54,10 @@ const SearchComponent = () => {
 
   const handleSearch = async (event) => {
     event.preventDefault();
-    setGenerating(true);
+    
     setTopicGenerated(topic);
+    setGeneratedText('');
+    setGenerating(true);
 
     const response = await fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`);
     if (response.status !== 200) {
@@ -72,7 +75,7 @@ const SearchComponent = () => {
     setChatStarted(false);
     setTopic('');
     topicFieldRef.current?.blur();
-    setGeneratedText('');
+    
 
     while (true) {
       const { done, value } = await reader.read();
@@ -86,12 +89,14 @@ const SearchComponent = () => {
 
   const more = async () => {
     setGeneratingMore(true);
+    setGenerating(true);
 
     const response = await fetch(`${backendUrl}/continuation?text=${generatedText}`);
     if (response.status !== 200) {
       setShowError(true);
       console.log(await response.json());
       setGeneratingMore(false);
+      setGenerating(false);
       return;
     }
     if (teacherRef.current) teacherRef.current.resetState();
@@ -106,6 +111,7 @@ const SearchComponent = () => {
         setGeneratingMore(false);
         return;
       }
+      setGenerating(false);
       setGeneratedText((text) => text + decoder.decode(value));
     }
   }
@@ -197,6 +203,12 @@ const SearchComponent = () => {
               {topicGenerated}
             </Typography>
             {generatedText && <p style={{ whiteSpace: "pre-line" }} onContextMenu={clicked}>{generatedText}</p>}
+            {((generating && !generatedText) || (generating && generatingMore)) &&
+            <span className="typing">
+              <span className="typing__dot"></span>
+              <span className="typing__dot"></span>
+              <span className="typing__dot"></span>
+            </span>}
             {generatedText && !generating && <Box sx={{ textAlign: 'right' }}>
               {generatedText.length < 3000 && <Button onClick={more} disabled={generatingMore}>More</Button>}
               {!chatStarted && <Button onClick={startChat} disabled={generatingMore}>Start chat</Button>}

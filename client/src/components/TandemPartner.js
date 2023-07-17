@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { Button, Avatar, Paper, Typography, TextField } from '@mui/material';
 import { diffWordsWithSpace, diffChars } from 'diff';
-import './TandemPartner.css';
+import './typing.css';
 
 const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, teacherRef }, ref) => {
     const [messageHistory, setMessageHistory] = useState([]);
