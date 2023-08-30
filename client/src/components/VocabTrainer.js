@@ -22,10 +22,13 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
     setExporting(false);
     setVocabulary([]);
   }
+
+  const getLanguage = () => translationLanguage;
   
   React.useImperativeHandle(ref, () => ({
     resetState,
-    addVocab
+    addVocab,
+    getLanguage
   }));
 
   useEffect(() => {

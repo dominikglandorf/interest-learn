@@ -1,8 +1,10 @@
 const textPrompt = (language, topic, niveau) =>
 `You are ${niveau}-level ${language} learner with the goal to write an engaging and informative text of 100 words in ${language} about "${topic}". Use vocabulary and grammar appropriate for ${niveau}-level learners and capture the reader's interest.`
 
-const explainPrompt = (selection, topic, language, niveau) => 
-`Please provide an explanation of up to two sentences for the phrase/word "${selection}" for a ${niveau}-level learner of ${language}. The explanation should be in ${language}. Ensure it's appropriate for ${niveau}-level learners. The general topic is ${topic}.`
+const explainPrompt = (selection, context, language, niveau, translation_language) => 
+    `Text: "${context}"
+
+You talk to a ${translation_language} native speaker who has a ${niveau} level of ${language}. Explain the meaning of "${selection}". Write in ${(niveau === "Beginner" ? translation_language : language)} and maximum two sentences.`
 
 const vocabularyPrompt = (language, niveau, text) =>
 `Extract important items from the text that enable you to discuss the content of the text. Each item can be a noun or verb or adjective or short phrase. Return a .csv style list. 

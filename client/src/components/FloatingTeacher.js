@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useEffect } from 'react';
+import React, { useState, forwardRef, useEffect, useRef } from 'react';
 import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popover, Box, useMediaQuery } from '@mui/material';
 import { Info, Add, AccountCircle } from '@mui/icons-material';
 import './FloatingTeacher.css';
@@ -7,13 +7,16 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
   const [generatingFor, setGeneratingFor] = useState('');
-  const [myInterval, setMyInterval] = useState(null);
+  const [selectionInterval, setSelectionInterval] = useState(null);
+  const [context, setContext] = useState('');
   const [generating, setGenerating] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltipAnchorEl, setTooltipAnchorEl] = useState(null);
   const [added, setAdded] = useState('');
   const [selectionPos, setSelectionPos] = useState(0);
   const [hidden, setHidden] = useState(false);
+
+  const anchorRef = useRef();
   
   const hide = () => setHidden(true);
   const show = () => setHidden(false);
@@ -34,35 +37,44 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
   }));
 
   useEffect(() => {
-    if (!myInterval) {
-      setMyInterval(
-        setInterval(() => {
-          const currentSelection = document.getSelection();
-          if (currentSelection.toString() !== selection) {
-            if (currentSelection.rangeCount>0) {
-              const range = currentSelection.getRangeAt(0);
-              const rect = range.getBoundingClientRect();
-              if (rect.width > 0) {
-                setSelectionPos(rect.top / window.innerHeight);
-              } else {
-                setSelectionPos(0);
-              }
-            }else {
-              setSelectionPos(0);
-            }
-          }
-          setSelection(currentSelection.toString());
-        },
-        1000)
-      )
-    }
-  }, [myInterval, selection]);
+    setSelectionInterval(setInterval(() => {
+      const currentSelection = document.getSelection();
+      const selectedText = currentSelection.toString();
+
+      if (currentSelection.rangeCount>0) {
+        const range = currentSelection.getRangeAt(0);
+        if (selectedText !== "") {
+          const punctuationPattern = /[.!?]/g;
+          const preSelectionRange = range.cloneRange();
+          preSelectionRange.selectNodeContents(range.commonAncestorContainer);
+          const nodeContent = preSelectionRange.cloneContents().textContent;
+          const punctuationBefore = [...nodeContent.substring(0, range.startOffset).matchAll(punctuationPattern)];
+          const positionOfLastPunctuation = punctuationBefore.length ? punctuationBefore.pop().index : 0;
+          const punctuationAfter = [...nodeContent.substring(range.endOffset).matchAll(punctuationPattern)];
+          const positionOfNextPunctuation = range.endOffset + (punctuationAfter.length ? punctuationAfter[0].index : 0);
+          setContext(nodeContent.substring(positionOfLastPunctuation, positionOfNextPunctuation))
+        }
+
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0) {
+          setSelectionPos(rect.top / window.innerHeight);
+        } else {
+          setSelectionPos(0);
+        }
+      }else {
+        setSelectionPos(0);
+      }
+
+      setSelection(selectedText);
+    },
+    1000))
+  }, []);
 
   const explain = (event) => {
     event.stopPropagation();
     setGenerating(true);
     setGeneratingFor(selection);
-    fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&topic=${topic}&niveau=${proficiency}`)
+    fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&context=${context}&niveau=${proficiency}&translation_language=${vocabRef.current.getLanguage()}`)
       .then(response => response.text())
       .then(text => {
         setGenerating(false);
@@ -99,8 +111,8 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
         setTooltipOpen(false);
       }, 2500);
     }
+    if (event.currentTarget) setTooltipAnchorEl(event.currentTarget);
     setTooltipOpen(true);
-    setTooltipAnchorEl(event.currentTarget);
   };
 
   const handleTooltipClose = () => {

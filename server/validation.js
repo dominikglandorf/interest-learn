@@ -28,6 +28,12 @@ const topic = () => query('topic')
   .isString().withMessage('Topic must be a string')
   .isLength({ max: 50 }).withMessage('Topic should not exceed 50 characters');
 
+  // Topic Validation Chain
+const context = () => query('context')
+.notEmpty().withMessage('Context is required')
+.isString().withMessage('Context must be a string')
+.isLength({ max: 300 }).withMessage('Context should not exceed 300 characters');
+
 // Topic Validation Chain
 const selection = () => query('selection')
   .notEmpty().withMessage('Selection is required')
@@ -79,4 +85,4 @@ const messageHistory = () => body('messageHistory')
     return true;
   });
 
-module.exports = { language, bodyLanguage, translationLanguage, niveau, topic, selection, text, vocabulary, bodyText, messageHistory, validationResult, bodyMessage }
+module.exports = { language, bodyLanguage, translationLanguage, niveau, topic, selection, context, text, vocabulary, bodyText, messageHistory, validationResult, bodyMessage }
