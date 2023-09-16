@@ -1,4 +1,5 @@
 const express = require('express');
+
 const textRouter = require('./text');
 const explanationRouter = require('./explanation');
 const vocabularyRouter = require('./vocabulary');

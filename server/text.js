@@ -5,6 +5,9 @@ const { openai, MODEL, MOCK } = require('./configuration');
 
 const router = express.Router();
 
+require('./db/connect');
+const Text = require('./models/text');
+
 router.get('', [
     validation.language(),
     validation.niveau(),
@@ -19,6 +22,7 @@ router.get('', [
     const language = req.query.language;
     const niveau = req.query.niveau;
     const topic = req.query.topic;
+    const userId = req.query.userId;
 
     if (MOCK) {
         function sleep(ms) {
@@ -39,9 +43,15 @@ router.get('', [
         res.setHeader('Transfer-Encoding', 'chunked');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('X-Accel-Buffering', 'no');
+
+        let response = '';
         for await (const part of stream) {
-            res.write(part.choices[0]?.delta.content || '');
+            responsePart = part.choices[0]?.delta.content || '';
+            response += responsePart;
+            res.write(responsePart);
         }
+        const text = new Text({ language, topic, niveau, text: response, userId });
+        await text.save();
         return res.end()
      } catch (error) {
         console.error("An error occurred:", error);
