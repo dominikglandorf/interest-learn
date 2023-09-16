@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useCookies } from 'react-cookie';
 import FloatingTeacher from './FloatingTeacher';
 import VocabTrainer from './VocabTrainer';
@@ -9,10 +10,12 @@ import { Grid, Button, MenuItem, Paper, Typography, Alert, Snackbar, Select, For
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
-const SearchComponent = () => {
+const SearchComponent = ({preferenceConsent, statisticsConsent}) => {
+
   const [cookies, setCookie] = useCookies(['language', 'proficiency']);
   const [language, setLanguage] = useState('');
   const [proficiency, setProficiency] = useState('');
+  const [userId, setUserId] = useState(null);
   const [topic, setTopic] = useState('');
   const [topicGenerated, setTopicGenerated] = useState('');
   const [generatedText, setGeneratedText] = useState('');
@@ -29,23 +32,37 @@ const SearchComponent = () => {
   const topicFieldRef = useRef(null);
 
   useEffect(() => {
-    if (language === "" & typeof(cookies.language) !== 'undefined') {
-      setLanguage(cookies.language);
+    if (preferenceConsent) {
+      if (language === "" & typeof(cookies.language) !== 'undefined') {
+        setLanguage(cookies.language);
+      }
+      if (proficiency === "" & typeof(cookies.proficiency) !== 'undefined') {
+        setProficiency(cookies.proficiency);
+      }
     }
-    if (proficiency === "" & typeof(cookies.proficiency) !== 'undefined') {
-      setProficiency(cookies.proficiency);
+    if (statisticsConsent) {
+      if (typeof(cookies.userId) === 'undefined') {
+        const userId = uuidv4();
+        setUserId(userId);
+        setCookie('userId', userId, { path: process.env.REACT_APP_BASENAME });
+      } else {
+        setUserId(cookies.userId);
+      }
     }
-    generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
-  }, [language, proficiency, cookies, generatedTextRef]);
+  }, [language, proficiency, cookies, generatedTextRef, setCookie, preferenceConsent, statisticsConsent]);
 
   const handleLanguageChange = (event, newValue) => {
     setLanguage(newValue);
-    setCookie('language', newValue, { path: process.env.REACT_APP_BASENAME });
+    if (preferenceConsent) {
+      setCookie('language', newValue, { path: process.env.REACT_APP_BASENAME });
+    }
   };
 
   const handleProficiencyChange = (event) => {
     setProficiency(event.target.value);
-    setCookie('proficiency', event.target.value, { path: process.env.REACT_APP_BASENAME });
+    if (preferenceConsent) {
+      setCookie('proficiency', event.target.value, { path: process.env.REACT_APP_BASENAME });
+    }
   };
 
   const handleTopicChange = (event) => {
@@ -59,7 +76,8 @@ const SearchComponent = () => {
     setGeneratedText('');
     setGenerating(true);
 
-    const response = await fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}`);
+    const response = await fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}&userId=${userId}`);
+    generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
     if (response.status !== 200) {
       setShowError(true);
       setGenerating(false);
@@ -127,6 +145,7 @@ const SearchComponent = () => {
     event.preventDefault();
     if (teacherRef.current) teacherRef.current.showContext(event);
   }
+
     
   return (
     <Grid marginTop={4}>
@@ -223,7 +242,8 @@ const SearchComponent = () => {
             teacherRef={teacherRef}
             language={language}
             proficiency={proficiency}
-            topic={topicGenerated} />}
+            topic={topicGenerated}
+            userId={userId} />}
           </Grid>
           <Grid item xs={12} md={6}>
           {generatedText.length > 0 && <VocabTrainer
@@ -234,7 +254,9 @@ const SearchComponent = () => {
             backendUrl={backendUrl}
             proficiency={proficiency}
             textGenerating={generating}
-            teacherRef={teacherRef} />}
+            teacherRef={teacherRef}
+            preferenceConsent={preferenceConsent}
+            userId={userId} />}
           </Grid>
           
       </Grid>
@@ -247,7 +269,9 @@ const SearchComponent = () => {
       backendUrl={backendUrl}
       language={language}
       proficiency={proficiency}
-      topic={topicGenerated} />}
+      topic={topicGenerated} 
+      userId={userId}
+      />}
 
       <Snackbar open={showError} autoHideDuration={5000} onClose={() => setShowError(false)}>
         <Alert severity="error">An error occurred! Please try again.</Alert>

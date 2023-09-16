@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Route, Routes, Link } from "react-router-dom"
+import { Routes, Route, Link } from "react-router-dom"
 import Generator from './components/Generator';
 import Instruction from './components/Instruction';
 import Donate from './components/Donate';
-import { CssBaseline, AppBar, Grid, Container, Typography, Toolbar, IconButton } from '@mui/material';
+import Consent from './components/Consent';
+import { CssBaseline, AppBar, Grid, Container, Typography, Toolbar, IconButton, Drawer, Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { HelpOutline, VolunteerActivism } from '@mui/icons-material';
+import { HelpOutline, VolunteerActivism, Menu as MenuIcon } from '@mui/icons-material';
 
 
 const theme = createTheme({
@@ -26,7 +27,10 @@ const theme = createTheme({
 
 function App() {
   const [showInstruction, setShowInstruction] = useState(false);
-
+  const [preferenceConsent, setPreferenceConsent] = useState(false);
+  const [statisticsConsent, setStatisticsConsent] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   const toggleInstruction = () => {
     setShowInstruction(!showInstruction)
   }
@@ -35,6 +39,16 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppBar position='static' color="primary" ><Toolbar  sx={{ padding: '15px' }} >
+        {/* <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={()=>setIsMenuOpen(true)}
+          >
+            <MenuIcon />
+          </IconButton> */}
         <Typography variant="h4" component="div"  sx={{ flexGrow: 1, textAlign: 'center' }}>
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             InterestLearn
@@ -59,16 +73,46 @@ function App() {
             <VolunteerActivism sx={{ fontSize: '32px' }} />
           </IconButton>
       </Toolbar></AppBar>
+
+      <Drawer
+      anchor="left"
+      open={isMenuOpen}
+      onClose={() => setIsMenuOpen(false)}>
+      <Box
+        sx={{ width: 250 }}
+        role="presentation"
+        onClick={() => setIsMenuOpen(false)}
+        onKeyDown={() => setIsMenuOpen(false)}
+      >
+        <List>
+            <ListItem key="imprint" disablePadding>
+              <ListItemButton>
+                <ListItemIcon>
+                <HelpOutline />
+                </ListItemIcon>
+                <ListItemText primary="Imprint" />
+              </ListItemButton>
+            </ListItem>
+        </List>
+        <Divider />
+      </Box>
+    </Drawer>
+
+      <Consent preferenceConsent={preferenceConsent}
+      setPreferenceConsent={setPreferenceConsent}
+      statisticsConsent={statisticsConsent}
+      setStatisticsConsent={setStatisticsConsent} />
       <Container>
-      <Grid container spacing={2}>
-        {showInstruction && <Grid item xs={12}><Instruction /></Grid>}
-        <Grid item xs={12}>
-          <Routes>
-            <Route path="/" element={<Generator />} />
-            <Route path="/donate" element={<Donate />} />
-          </Routes>
+        <Grid container spacing={2}>
+          {showInstruction && <Grid item xs={12}><Instruction /></Grid>}
+          <Grid item xs={12} sx={{flex: 1}}>
+            <Routes>
+              <Route path="/" element={<Generator preferenceConsent={preferenceConsent} statisticsConsent={statisticsConsent} />} />
+              <Route path="/donate" element={<Donate />} />
+            </Routes>
+              
+          </Grid>
         </Grid>
-      </Grid>
       </Container>
     </ThemeProvider>
   );

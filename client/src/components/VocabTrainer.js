@@ -5,7 +5,7 @@ import { Button, Chip, Typography, Grid, TextField, Box, Autocomplete, IconButto
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getLanguageName, languageNames } from './language';
 
-const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef }, ref) => {
+const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef, preferenceConsent }, ref) => {
   const [generating, setGenerating] = useState(false);
   const [vocabulary, setVocabulary] = useState([]);
   const [exporting, setExporting] = useState(false);
@@ -33,14 +33,14 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
 
   useEffect(() => {
     if(!checkedSystemLanguage) {
-      if(typeof(cookies.translation_language) !== "undefined") {
+      if(typeof(cookies.translation_language) !== "undefined" & preferenceConsent) {
         setTranslationLanguage(cookies.translation_language);
       } else {
         setTranslationLanguage(getLanguageName(navigator.language))
       }
       setCheckedSystemLanguage(true);
     }
-  }, [checkedSystemLanguage, translationLanguage, cookies]);
+  }, [checkedSystemLanguage, translationLanguage, cookies, preferenceConsent]);
 
   const collect = () => {
     if (generating) return
@@ -96,7 +96,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
 
   const handleTransLangChange = (event, newValue) => {
     setTranslationLanguage(newValue);
-    setCookie('translation_language', newValue, { path: process.env.REACT_APP_BASENAME });
+    if (preferenceConsent) setCookie('translation_language', newValue, { path: process.env.REACT_APP_BASENAME });
   };
 
   const deleteVocab = () => setVocabulary([]);

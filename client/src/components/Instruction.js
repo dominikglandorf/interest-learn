@@ -1,3 +1,5 @@
+import { Link } from '@mui/material';
+
 function Instruction() {
     
     return (<>
@@ -12,7 +14,9 @@ function Instruction() {
             <li>Import the comma-seperated text file to your favorite flashcard learning platform such as Anki to regularly study and retain the words.</li>
         </ol>
         <p>Language learners who can already read the language and have some basic vocabulary but struggle to understand media designed for a native audience benefit the most. It is highly recommended to actively engage in conversations with a tandem partner at this level of learning.</p>
+        <p>This application was made by <Link href="https://dogl.de">Dominik Glandorf</Link>. Please feel free to reach out with feedback to <Link href="mailto:dominik.glandorf@yale.edu">dominik.glandorf@yale.edu</Link></p>
     </>)
+
 
 }
 

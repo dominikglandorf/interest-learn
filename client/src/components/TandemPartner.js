@@ -3,7 +3,7 @@ import { Button, Avatar, Paper, Typography, TextField } from '@mui/material';
 import { diffWordsWithSpace, diffChars } from 'diff';
 import './typing.css';
 
-const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, teacherRef }, ref) => {
+const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, teacherRef, userId }, ref) => {
     const [messageHistory, setMessageHistory] = useState([]);
     const [loading, setLoading] = useState(false); 
     const [newMessage, setNewMessage] = useState('');

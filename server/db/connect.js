@@ -1,2 +1,4 @@
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://127.0.0.1:27017/interest-learn');
+const { DB_NAME } = require('./configuration');
+
+mongoose.connect('mongodb://127.0.0.1:27017/' + DB_NAME);
