@@ -2,11 +2,9 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const textSchema = new Schema({
-  language: String,
-  niveau: String,
-  topic: String,
+const continuationSchema = new Schema({
   text: String,
+  continuation: String,
   userId: String,
   createdAt: {
     type: Date,
@@ -14,6 +12,6 @@ const textSchema = new Schema({
   },
 });
 
-const Text = mongoose.model('Text', textSchema);
+const Continuation = mongoose.model('Continuation', continuationSchema);
 
-module.exports = Text;
+module.exports = Continuation;

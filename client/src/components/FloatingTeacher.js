@@ -3,7 +3,7 @@ import { SpeedDial, SpeedDialAction, Tooltip, Snackbar, CircularProgress, Popove
 import { Info, Add, AccountCircle } from '@mui/icons-material';
 import './FloatingTeacher.css';
 
-const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, tandemRef }, ref) => {
+const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, language, vocabRef, proficiency, tandemRef, userId }, ref) => {
   const [explanation, setExplanation] = useState('');
   const [selection, setSelection] = useState('');
   const [generatingFor, setGeneratingFor] = useState('');
@@ -74,7 +74,7 @@ const FloatingTeacher  = forwardRef(({ generatedText, topic, backendUrl, languag
     event.stopPropagation();
     setGenerating(true);
     setGeneratingFor(selection);
-    fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&context=${context}&niveau=${proficiency}&translation_language=${vocabRef.current.getLanguage()}`)
+    fetch(`${backendUrl}/explanation?selection=${selection}&language=${language}&context=${context}&niveau=${proficiency}&translation_language=${vocabRef.current.getLanguage()}${userId ? `&userId=${userId}` : ''}`)
       .then(response => response.text())
       .then(text => {
         setGenerating(false);

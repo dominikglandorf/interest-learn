@@ -5,6 +5,9 @@ const { openai, MODEL, MOCK } = require('./configuration');
 
 const router = express.Router();
 
+require('./db/connect');
+const Continuation = require('./models/continuation');
+
 router.get('', [
     validation.text(),
   ], async (req, res) => {
@@ -15,6 +18,7 @@ router.get('', [
     }
 
     const text = req.query.text;
+    const userId = req.query.userId || undefined;
     // console.log(continuePrompt(text))
 
     if (MOCK) {
@@ -36,8 +40,15 @@ router.get('', [
         res.setHeader('Transfer-Encoding', 'chunked');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('X-Accel-Buffering', 'no');
+        let response = '';
         for await (const part of stream) {
-            res.write(part.choices[0]?.delta.content || '');
+            responsePart = part.choices[0]?.delta.content || '';
+            res.write(responsePart);
+            response += responsePart;
+        }
+        if (userId) {
+            const continuation = new Continuation({ text, continuation: response, userId });
+            await continuation.save();
         }
         return res.end();
     } catch (error) {

@@ -4,6 +4,9 @@ const { openai, MODEL, MOCK } = require('./configuration');
 
 const router = express.Router();
 
+require('./db/connect');
+const Tandem = require('./models/tandem');
+
 router.post('', [
     validation.bodyText(),
     validation.bodyLanguage(),
@@ -18,6 +21,7 @@ router.post('', [
     const text = req.body.text;
     const language = req.body.language;
     const messageHistory = req.body.messageHistory;
+    const userId = req.body.userId || undefined;
     
     if (MOCK) {
         return res.send("Bien sûr ! Je serai ravi d'être votre partenaire de tandem. Parlons du texte sur les road trips en Californie. Quelles parties du texte vous ont le plus intéressé ? Avez-vous déjà fait un road trip en Californie ou ailleurs ? Si oui, quels ont été vos endroits préférés à visiter lors de vos voyages en voiture ? Et si vous n'avez pas encore fait de road trip, quelle serait votre destination de rêve en Californie ou ailleurs ?");
@@ -36,8 +40,15 @@ router.post('', [
 
         res.setHeader('Content-Type', 'text/plain');
         res.setHeader('Transfer-Encoding', 'chunked');
+        let response = "";
         for await (const part of stream) {
-            res.write(part.choices[0]?.delta.content || '');
+            responsePart = part.choices[0]?.delta.content || '';
+            res.write(responsePart);
+            response += responsePart;
+        }
+        if (userId) {
+            const tandem = new Tandem({ text, language, messageHistory, response, userId });
+            await tandem.save();
         }
         return res.end()
      } catch (error) {

@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const textSchema = new Schema({
+const vocabularySchema = new Schema({
   language: String,
   niveau: String,
-  topic: String,
   text: String,
+  vocabulary: Array,
   userId: String,
   createdAt: {
     type: Date,
@@ -14,6 +14,6 @@ const textSchema = new Schema({
   },
 });
 
-const Text = mongoose.model('Text', textSchema);
+const Vocabulary = mongoose.model('Vocabulary', vocabularySchema);
 
-module.exports = Text;
+module.exports = Vocabulary;

@@ -5,6 +5,9 @@ const { openai, MODEL, MOCK } = require('./configuration');
 
 const router = express.Router();
 
+require('./db/connect');
+const Vocabulary = require('./models/vocabulary');
+
 function convertCommaSeparatedList(string) {
     // remove full stops from the end
     if (string.charAt(string.length - 1) === '.') {
@@ -17,10 +20,7 @@ function convertCommaSeparatedList(string) {
     // Trim each entry and create a new array
     const trimmedEntries = entries.map((entry) => entry.trim());
   
-    // Convert the trimmed entries array to JSON
-    const jsonArray = JSON.stringify(trimmedEntries);
-  
-    return jsonArray;
+    return trimmedEntries;
   }
 
 router.get('', [
@@ -37,6 +37,7 @@ router.get('', [
     const language = req.query.language;
     const niveau = req.query.niveau;
     const text = req.query.text;
+    const userId = req.query.userId || undefined;
 
     if (MOCK==2) {
         function sleep(ms) {
@@ -52,8 +53,12 @@ router.get('', [
             messages: [{role: "user", content: vocabularyPrompt(language, niveau, text)}],
         });
     
-        const vocab = convertCommaSeparatedList(completion.choices[0].message.content)
-        return res.send(vocab);
+        const vocab = convertCommaSeparatedList(completion.choices[0].message.content);
+        if (userId) {
+            const vocabulary = new Vocabulary({ language, niveau, text, vocabulary: vocab, userId });
+            await vocabulary.save();
+        }
+        return res.send(JSON.stringify(vocab))// Convert the trimmed entries array to JSON
     } catch (error) {
         console.error("An error occurred:", error);
         return res.status(400).json(error);

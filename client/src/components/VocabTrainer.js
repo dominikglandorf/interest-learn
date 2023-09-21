@@ -5,7 +5,7 @@ import { Button, Chip, Typography, Grid, TextField, Box, Autocomplete, IconButto
 import DeleteIcon from '@mui/icons-material/Delete';
 import { getLanguageName, languageNames } from './language';
 
-const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef, preferenceConsent }, ref) => {
+const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, proficiency, textGenerating, teacherRef, preferenceConsent, userId }, ref) => {
   const [generating, setGenerating] = useState(false);
   const [vocabulary, setVocabulary] = useState([]);
   const [exporting, setExporting] = useState(false);
@@ -45,7 +45,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   const collect = () => {
     if (generating) return
     setGenerating(true);
-    fetch(`${backendUrl}/vocabulary?text=${generatedText}&language=${language}&niveau=${proficiency}`)
+    fetch(`${backendUrl}/vocabulary?text=${generatedText}&language=${language}&niveau=${proficiency}${userId ? `&userId=${userId}` : ''}`)
       .then(response => response.json())
       .then(data => {
         setGenerating(false);
@@ -62,7 +62,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
   const exportList = () => {
     if (exporting) return
     setExporting(true);
-    fetch(`${backendUrl}/export?vocabulary=${vocabulary.join(',')}&language=${language}&translation_language=${translationLanguage}`)
+    fetch(`${backendUrl}/export?vocabulary=${vocabulary.join(',')}&language=${language}&translation_language=${translationLanguage}${userId ? `&userId=${userId}` : ''}`)
       .then(response => response.text())
       .then(data => {
         console.log(data)
@@ -110,7 +110,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
       </Typography>
         {vocabulary.length > 0 && <> {vocabulary.map(Word)} </>}
         {!generating && !textGenerating && <Button onClick={collect}>Auto-extract</Button>}
-        {generating && <ProgressBar time={generatedText.length / 200} />}
+        {generating && <ProgressBar time={generatedText.length / 300} />}
       </Grid>
       {vocabulary.length > 0 && <>
         <Grid item xs={6}>
@@ -130,7 +130,7 @@ const VocabTrainer = forwardRef(({ topic, generatedText, backendUrl, language, p
         </Grid>
         <Grid item xs={6}>
         {!exporting && <Button fullWidth onClick={exportList} disabled={!translationLanguage}>Export</Button>}
-        {exporting && <ProgressBar time={vocabulary.length * 1.5} />}
+        {exporting && <ProgressBar time={vocabulary.length * 1} />}
         </Grid>
         </>}
     </Grid>

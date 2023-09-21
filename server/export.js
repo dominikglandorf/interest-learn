@@ -5,6 +5,9 @@ const { openai, MODEL, MOCK } = require('./configuration');
 
 const router = express.Router();
 
+require('./db/connect');
+const Export = require('./models/export');
+
 const sanitize = (info) => {
     return info.replace("N/A", "-").replace("n/a", "-").trim()
 }
@@ -33,6 +36,7 @@ router.get('', [
     const language = req.query.language;
     const translationLanguage = req.query.translation_language
     const vocabulary = req.query.vocabulary;
+    const userId = req.query.userId || undefined;
 
     if (MOCK) {
         function sleep(ms) {
@@ -68,6 +72,10 @@ Please note that some words may not require articles in certain contexts, but I 
         });
 
         const vocab = extractPairs(completion.choices[0].message.content)
+        if (userId) {
+            const exportDoc = new Export({ language, vocabulary: vocabulary.split(","), translationLanguage, export: vocab.split("\n"), userId });
+            await exportDoc.save();
+        }
         return res.send(vocab);
     } catch (error) {
         console.error("An error occurred:", error);

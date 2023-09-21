@@ -74,7 +74,11 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
     
     const correctMessage = async (message) => {
       const data = {
-        message: message
+        message: message,
+        language: language,
+      }
+      if (userId) {
+        data.userId = userId;
       }
 
       try {
@@ -113,6 +117,9 @@ const TandemPartner = forwardRef(({ generatedText, topic, backendUrl, language, 
             messageHistory: history.map(message => ({
               role: message.role, content: message.content
             }))
+        }
+        if (userId) {
+          data.userId = userId;
         }
 
         setMessageHistory((messageHistory) => messageHistory.concat({role: 'assistant', content: ''}));

@@ -40,6 +40,7 @@ const SearchComponent = ({preferenceConsent, statisticsConsent}) => {
         setProficiency(cookies.proficiency);
       }
     }
+    console.log(statisticsConsent)
     if (statisticsConsent) {
       if (typeof(cookies.userId) === 'undefined') {
         const userId = uuidv4();
@@ -76,7 +77,7 @@ const SearchComponent = ({preferenceConsent, statisticsConsent}) => {
     setGeneratedText('');
     setGenerating(true);
 
-    const response = await fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}&userId=${userId}`);
+    const response = await fetch(`${backendUrl}/text?language=${language}&niveau=${proficiency}&topic=${topic}${userId ? `&userId=${userId}` : ''}`);
     generatedTextRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
     if (response.status !== 200) {
       setShowError(true);
@@ -109,7 +110,7 @@ const SearchComponent = ({preferenceConsent, statisticsConsent}) => {
     setGeneratingMore(true);
     setGenerating(true);
 
-    const response = await fetch(`${backendUrl}/continuation?text=${generatedText}`);
+    const response = await fetch(`${backendUrl}/continuation?text=${generatedText}${userId ? `&userId=${userId}` : ''}`);
     if (response.status !== 200) {
       setShowError(true);
       console.log(await response.json());

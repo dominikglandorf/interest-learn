@@ -22,7 +22,7 @@ router.get('', [
     const language = req.query.language;
     const niveau = req.query.niveau;
     const topic = req.query.topic;
-    const userId = req.query.userId;
+    const userId = req.query.userId || undefined;
 
     if (MOCK) {
         function sleep(ms) {
@@ -50,8 +50,10 @@ router.get('', [
             response += responsePart;
             res.write(responsePart);
         }
-        const text = new Text({ language, topic, niveau, text: response, userId });
-        await text.save();
+        if (userId) {
+            const text = new Text({ language, topic, niveau, text: response, userId });
+            await text.save();
+        }
         return res.end()
      } catch (error) {
         console.error("An error occurred:", error);
