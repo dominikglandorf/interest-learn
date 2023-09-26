@@ -6,6 +6,8 @@ const Consent = ({preferenceConsent, setPreferenceConsent, statisticsConsent, se
 
     const [consentDialogOpen, setConsentDialogOpen] = useState(false);
     const [cookies, setCookie] = useCookies(['preferenceConsent', 'statisticsConsent']);
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
 
     useEffect(() => {
         if (typeof(cookies.preferenceConsent) === 'undefined' ||
@@ -28,14 +30,14 @@ const Consent = ({preferenceConsent, setPreferenceConsent, statisticsConsent, se
     }
 
     const handleAccept = () => {
-        setCookie('preferenceConsent', preferenceConsent);
-        setCookie('statisticsConsent', statisticsConsent);
+        setCookie('preferenceConsent', preferenceConsent, { expires: date } );
+        setCookie('statisticsConsent', statisticsConsent, { expires: date } );
         setConsentDialogOpen(false);
     };
     
     const handleDecline = () => {
-        setCookie('preferenceConsent', false);
-        setCookie('statisticsConsent', false);
+        setCookie('preferenceConsent', false, { expires: date } );
+        setCookie('statisticsConsent', false, { expires: date } );
         setConsentDialogOpen(false);
     };
 

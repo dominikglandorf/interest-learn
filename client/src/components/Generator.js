@@ -31,6 +31,9 @@ const SearchComponent = ({preferenceConsent, statisticsConsent}) => {
   const generatedTextRef = useRef(null);
   const topicFieldRef = useRef(null);
 
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + 1);
+
   useEffect(() => {
     if (preferenceConsent) {
       if (language === "" & typeof(cookies.language) !== 'undefined') {
@@ -45,24 +48,24 @@ const SearchComponent = ({preferenceConsent, statisticsConsent}) => {
       if (typeof(cookies.userId) === 'undefined') {
         const userId = uuidv4();
         setUserId(userId);
-        setCookie('userId', userId, { path: process.env.REACT_APP_BASENAME });
+        setCookie('userId', userId, { path: process.env.REACT_APP_BASENAME, expires: date});
       } else {
         setUserId(cookies.userId);
       }
     }
-  }, [language, proficiency, cookies, generatedTextRef, setCookie, preferenceConsent, statisticsConsent]);
+  }, [language, proficiency, cookies, generatedTextRef, setCookie, preferenceConsent, statisticsConsent, date]);
 
   const handleLanguageChange = (event, newValue) => {
     setLanguage(newValue);
     if (preferenceConsent) {
-      setCookie('language', newValue, { path: process.env.REACT_APP_BASENAME });
+      setCookie('language', newValue, { path: process.env.REACT_APP_BASENAME, expires: date });
     }
   };
 
   const handleProficiencyChange = (event) => {
     setProficiency(event.target.value);
     if (preferenceConsent) {
-      setCookie('proficiency', event.target.value, { path: process.env.REACT_APP_BASENAME });
+      setCookie('proficiency', event.target.value, { path: process.env.REACT_APP_BASENAME, expires: date });
     }
   };
 
